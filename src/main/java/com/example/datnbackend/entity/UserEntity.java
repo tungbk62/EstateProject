@@ -46,8 +46,9 @@ public class UserEntity {
     @Column(name = "email", unique = true)
     private String email;
 
-    @Column(name = "address")
-    private String address;
+    @ManyToOne
+    @JoinColumn(name = "wards_id")
+    private WardsEntity wards;
 
     @Column(name = "image_id")
     private Long imageId;

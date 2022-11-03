@@ -1,9 +1,7 @@
 package com.example.datnbackend.controller;
 
 import com.example.datnbackend.dto.MainResponse;
-import com.example.datnbackend.dto.user.UserDescriptionAdminResponse;
-import com.example.datnbackend.dto.user.UserDetailAdminResponseRequest;
-import com.example.datnbackend.dto.user.UserDetailResponseRequest;
+import com.example.datnbackend.dto.user.UserDetailRequest;
 import com.example.datnbackend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -40,9 +38,19 @@ public class UserController {
         }
     }
 
+    @GetMapping("/admin/{id}")
+    @Secured("ROLE_ADMIN")
+    ResponseEntity<Object> getUserDetailForAdmin(@PathVariable(value = "id") Long id){
+        try{
+            return ResponseEntity.ok(userService.getUserDetailForAdmin(id));
+        }catch(Exception e){
+            return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
+        }
+    }
+
     @PutMapping("/{id}")
     ResponseEntity<Object> updateUserDetail(@PathVariable(value = "id") Long id,
-                                            @RequestBody UserDetailResponseRequest requestBody){
+                                            @RequestBody UserDetailRequest requestBody){
         try{
             return ResponseEntity.ok(userService.updateUserDetail(id, requestBody));
         }catch(Exception e){

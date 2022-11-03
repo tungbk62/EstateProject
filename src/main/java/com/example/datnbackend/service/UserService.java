@@ -5,7 +5,8 @@ import com.example.datnbackend.dto.security.UserSigninRequest;
 import com.example.datnbackend.dto.security.UserSignupAdminRequest;
 import com.example.datnbackend.dto.security.UserSignupRequest;
 import com.example.datnbackend.dto.user.UserDescriptionAdminResponse;
-import com.example.datnbackend.dto.user.UserDetailResponseRequest;
+import com.example.datnbackend.dto.user.UserDetailRequest;
+import com.example.datnbackend.dto.user.UserDetailResponse;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
@@ -15,8 +16,9 @@ public interface UserService {
     SecurityResponse signup(UserSignupRequest signupDTO);
     SecurityResponse signupAdmin(UserSignupAdminRequest signupDTO);
     List<UserDescriptionAdminResponse> getUserDescriptionForAdmin(Integer page, Integer size, String query);
-    UserDetailResponseRequest getUserDetail(Long id);
-    UserDetailResponseRequest updateUserDetail(Long id, UserDetailResponseRequest requestBody);
+    UserDetailResponse getUserDetail(Long id);
+    UserDetailResponse getUserDetailForAdmin(Long id);
+    UserDetailResponse updateUserDetail(Long id, UserDetailRequest requestBody);
     void lockUserAccount(Long id, Boolean locked);
     void displayReviewUserAccount(Long id, Boolean display);
     void deleteMultipleUser(List<Long> ids);

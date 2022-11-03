@@ -37,7 +37,8 @@ public class UserSignupRequest {
 
     private String email;
 
-    private String address;
+    private Long wardsId;
 
+    @NotNull
     private String role;
 }

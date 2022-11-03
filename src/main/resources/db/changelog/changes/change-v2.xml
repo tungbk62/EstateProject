@@ -6,23 +6,57 @@
 		 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
     <changeSet id="1" author="tungbk62">
         <createTable tableName="province">
-            <column name="id" type="int">
+            <column name="id" type="int" autoIncrement="true">
                 <constraints primaryKey="true"/>
             </column>
-            <column name="name" type="varchar(20)">
+            <column name="name" type="varchar(80)">
                 <constraints nullable="false"/>
             </column>
         </createTable>
-    </changeSet>
 
-    <changeSet id="" author="tungbk62">
-        <createTable tableName="wards">
-            <column name="id" type="int">
+        <createTable tableName="district">
+            <column name="id" type="int" autoIncrement="true">
                 <constraints primaryKey="true"/>
             </column>
-            <column name="name" type="varchar(20)">
+            <column name="province_id" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="varchar(80)">
                 <constraints nullable="false"/>
             </column>
         </createTable>
+
+        <createTable tableName="wards">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="district_id" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="varchar(80)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="district"
+                                 baseColumnNames="province_id"
+                                 constraintName="fk_province_district"
+                                 referencedTableName="province"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="wards"
+                                 baseColumnNames="district_id"
+                                 constraintName="fk_district_wards"
+                                 referencedTableName="district"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="user"
+                                 baseColumnNames="wards_id"
+                                 constraintName="fk_user_wards"
+                                 referencedTableName="wards"
+                                 referencedColumnNames="id"
+                                 onDelete="SET NULL"/>
     </changeSet>
 </databaseChangeLog>

@@ -3,11 +3,14 @@ package com.example.datnbackend.service.impl;
 import com.example.datnbackend.dto.exception.AppException;
 import com.example.datnbackend.dto.security.*;
 import com.example.datnbackend.dto.user.UserDescriptionAdminResponse;
-import com.example.datnbackend.dto.user.UserDetailResponseRequest;
+import com.example.datnbackend.dto.user.UserDetailRequest;
+import com.example.datnbackend.dto.user.UserDetailResponse;
 import com.example.datnbackend.entity.RoleEntity;
 import com.example.datnbackend.entity.UserEntity;
+import com.example.datnbackend.entity.WardsEntity;
 import com.example.datnbackend.repository.RoleRepository;
 import com.example.datnbackend.repository.UserRepository;
+import com.example.datnbackend.repository.WardsRepository;
 import com.example.datnbackend.security.JwtTokenProvider;
 import com.example.datnbackend.security.UserPrincipal;
 import com.example.datnbackend.service.UserService;
@@ -25,7 +28,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -43,6 +45,8 @@ public class UserServiceImpl implements UserService {
     PasswordEncoder passwordEncoder;
     @Autowired
     JwtTokenProvider jwtTokenProvider;
+    @Autowired
+    WardsRepository wardsRepository;
 
     @Override
     public ResponseEntity<?> signin(UserSigninRequest signinDTO) {
@@ -74,7 +78,6 @@ public class UserServiceImpl implements UserService {
         userEntity.setFirstName(signupDTO.getFirstName());
         userEntity.setLastName(signupDTO.getLastName());
         userEntity.setBirthDay(signupDTO.getBirthDay());
-        userEntity.setAddress(signupDTO.getAddress());
         userEntity.setEmail(signupDTO.getEmail());
         userEntity.setPhone(signupDTO.getPhone());
         userEntity.setDeleted(false);
@@ -96,6 +99,12 @@ public class UserServiceImpl implements UserService {
             return new SecurityResponse(false, "User role not exists");
         }
 
+        WardsEntity wardsEntity = wardsRepository.findOneById(signupDTO.getWardsId());
+        if(wardsEntity == null){
+            return new SecurityResponse(false, "Not found address with id: " + signupDTO.getWardsId());
+        }
+        userEntity.setWards(wardsEntity);
+
         userEntity.setRoles(Collections.singleton(userRole));
 
         userRepository.save(userEntity);
@@ -107,18 +116,26 @@ public class UserServiceImpl implements UserService {
     public SecurityResponse signupAdmin(UserSignupAdminRequest signupDTO) {
         RoleEntity userRole;
 
-
         UserEntity userEntity = new UserEntity();
         userEntity.setUsername(signupDTO.getUsername());
         userEntity.setPassword(passwordEncoder.encode(signupDTO.getPassword()));
         userEntity.setFirstName(signupDTO.getFirstName());
         userEntity.setLastName(signupDTO.getLastName());
         userEntity.setBirthDay(signupDTO.getBirthDay());
-        userEntity.setAddress(signupDTO.getAddress());
         userEntity.setEmail(signupDTO.getEmail());
         userEntity.setPhone(signupDTO.getPhone());
         userEntity.setDeleted(false);
         userEntity.setLocked(false);
+
+        if(signupDTO.getWardsId() != null){
+            WardsEntity wardsEntity = wardsRepository.findOneById(signupDTO.getWardsId());
+            if(wardsEntity == null){
+                return new SecurityResponse(false, "Not found address with id: " + signupDTO.getWardsId());
+            }
+            userEntity.setWards(wardsEntity);
+        }else {
+            userEntity.setWards(null);
+        }
 
         userRole = roleRepository.findByName(RoleEntity.Name.ROLE_ADMIN);
         if(userRole == null){
@@ -156,17 +173,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDetailResponseRequest getUserDetail(Long id) {
+    public UserDetailResponse getUserDetail(Long id) {
         UserPrincipal userPrincipal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if(userPrincipal.getId() != id && !checkAuthorities(Arrays.asList("ROLE_SUPER_ADMIN", "ROLE_ADMIN"), userPrincipal)){
+        if(userPrincipal.getId() != id){
             throw new AppException("You do not have role");
         }
 
-        UserEntity userEntity = userRepository.findOneByIdAndDeletedFalseWithNormalRole(id);
+        UserEntity userEntity = userRepository.findOneByIdAndDeletedFalse(id);
         if(userEntity == null){
             throw new AppException("Not found user with id: " + id);
         }
-        return new UserDetailResponseRequest(
+        return new UserDetailResponse(
                 userEntity.getId(),
                 userEntity.getUsername(),
                 userEntity.getFirstName(),
@@ -174,16 +191,43 @@ public class UserServiceImpl implements UserService {
                 userEntity.getBirthDay(),
                 userEntity.getPhone(),
                 userEntity.getEmail(),
-                userEntity.getAddress(),
+                userEntity.getWards() == null ? null : userEntity.getWards().getDistrict().getProvince().getName(),
+                userEntity.getWards() == null ? null : userEntity.getWards().getDistrict().getName(),
+                userEntity.getWards() == null ? null : userEntity.getWards().getName(),
                 null,
                 userEntity.getDisplayReview(),
+                userEntity.getLocked(),
                 userEntity.getCreatedDate());
     }
 
     @Override
-    public UserDetailResponseRequest updateUserDetail(Long id, UserDetailResponseRequest requestBody) {
+    public UserDetailResponse getUserDetailForAdmin(Long id) {
+        UserEntity userEntity = userRepository.findOneByIdAndDeletedFalseWithNormalRole(id);
+        if(userEntity == null){
+            throw new AppException("Not found user with id: " + id);
+        }
+        return new UserDetailResponse(
+                userEntity.getId(),
+                userEntity.getUsername(),
+                userEntity.getFirstName(),
+                userEntity.getLastName(),
+                userEntity.getBirthDay(),
+                userEntity.getPhone(),
+                userEntity.getEmail(),
+                userEntity.getWards() == null ? null : userEntity.getWards().getDistrict().getProvince().getName(),
+                userEntity.getWards() == null ? null : userEntity.getWards().getDistrict().getName(),
+                userEntity.getWards() == null ? null : userEntity.getWards().getName(),
+                null,
+                userEntity.getDisplayReview(),
+                userEntity.getLocked(),
+                userEntity.getCreatedDate());
+    }
+
+
+    @Override
+    public UserDetailResponse updateUserDetail(Long id, UserDetailRequest requestBody) {
         UserPrincipal userPrincipal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if(userPrincipal.getId() != id && !checkAuthorities(Arrays.asList("ROLE_SUPER_ADMIN", "ROLE_ADMIN"), userPrincipal)){
+        if(userPrincipal.getId() != id){
             throw new AppException("You do not have role");
         }
 
@@ -219,13 +263,17 @@ public class UserServiceImpl implements UserService {
         if(requestBody.getBirthDay() != null){
             userEntity.setBirthDay(requestBody.getBirthDay());
         }
-        if(requestBody.getAddress() != null){
-            userEntity.setAddress(requestBody.getAddress());
+        if(requestBody.getWardsId() != null){
+            WardsEntity wardsEntity = wardsRepository.findOneById(requestBody.getWardsId());
+            if(wardsEntity == null){
+                throw new AppException("Not found address with id: " + requestBody.getWardsId());
+            }
+            userEntity.setWards(wardsEntity);
         }
 
         userRepository.save(userEntity);
 
-        return new UserDetailResponseRequest(
+        return new UserDetailResponse(
                 userEntity.getId(),
                 userEntity.getUsername(),
                 userEntity.getFirstName(),
@@ -233,9 +281,12 @@ public class UserServiceImpl implements UserService {
                 userEntity.getBirthDay(),
                 userEntity.getPhone(),
                 userEntity.getEmail(),
-                userEntity.getAddress(),
+                userEntity.getWards() == null ? null : userEntity.getWards().getDistrict().getProvince().getName(),
+                userEntity.getWards() == null ? null : userEntity.getWards().getDistrict().getName(),
+                userEntity.getWards() == null ? null : userEntity.getWards().getName(),
                 null,
                 userEntity.getDisplayReview(),
+                userEntity.getLocked(),
                 userEntity.getCreatedDate());
     }
 

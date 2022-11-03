@@ -24,7 +24,7 @@
             <column name="email" type="varchar(250)">
                 <constraints unique="true"/>
             </column>
-            <column name="address" type="varchar(250)"/>
+            <column name="wards_id" type="int"/>
             <column name="image_id" type="int"/>
             <column name="display_review" type="boolean">
                 <constraints nullable="false"/>

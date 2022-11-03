@@ -4,7 +4,11 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
 		 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
-
     <include file="/db/changelog/changes/change-v1.xml"/>
     <include file="/db/changelog/changes/insert-role.sql"/>
+    <include file="/db/changelog/changes/change-v2.xml"/>
+    <include file="/db/changelog/changes/insert-province.sql"/>
+    <include file="/db/changelog/changes/insert-district.sql"/>
+    <include file="/db/changelog/changes/insert-wards.sql"/>
+    <include file="/db/changelog/changes/change-v3.xml"/>
 </databaseChangeLog>

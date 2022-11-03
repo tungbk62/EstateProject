@@ -5,13 +5,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.NotEmpty;
 import java.util.Date;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserDetailResponseRequest {
+public class UserDetailRequest {
     private Long id;
     private String username;
     private String firstName;
@@ -20,7 +19,7 @@ public class UserDetailResponseRequest {
     private Date birthDay;
     private String phone;
     private String email;
-    private String address;
+    private Long wardsId;
     private String imageUrl;
     private Boolean displayReview;
     private Date createdDate;
