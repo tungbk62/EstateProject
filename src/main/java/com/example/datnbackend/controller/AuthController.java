@@ -1,10 +1,8 @@
 package com.example.datnbackend.controller;
 
 import com.example.datnbackend.dto.MainResponse;
-import com.example.datnbackend.dto.security.SecurityResponse;
-import com.example.datnbackend.dto.security.UserSigninRequest;
-import com.example.datnbackend.dto.security.UserSignupAdminRequest;
-import com.example.datnbackend.dto.security.UserSignupRequest;
+import com.example.datnbackend.dto.security.*;
+import com.example.datnbackend.entity.RoleEntity;
 import com.example.datnbackend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -40,4 +38,13 @@ public class AuthController {
         }
     }
 
+    @PutMapping(value = "/password")
+    ResponseEntity<Object> changePassword(@RequestBody ChangePasswordRequest requestBody){
+        try{
+            userService.changePassword(requestBody);
+            return ResponseEntity.ok(new MainResponse(true, "Change password successfully"));
+        }catch(Exception e){
+            return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
+        }
+    }
 }

@@ -1,9 +1,6 @@
 package com.example.datnbackend.service;
 
-import com.example.datnbackend.dto.security.SecurityResponse;
-import com.example.datnbackend.dto.security.UserSigninRequest;
-import com.example.datnbackend.dto.security.UserSignupAdminRequest;
-import com.example.datnbackend.dto.security.UserSignupRequest;
+import com.example.datnbackend.dto.security.*;
 import com.example.datnbackend.dto.user.UserDescriptionAdminResponse;
 import com.example.datnbackend.dto.user.UserDetailRequest;
 import com.example.datnbackend.dto.user.UserDetailResponse;
@@ -22,4 +19,5 @@ public interface UserService {
     void lockUserAccount(Long id, Boolean locked);
     void displayReviewUserAccount(Long id, Boolean display);
     void deleteMultipleUser(List<Long> ids);
+    void changePassword(ChangePasswordRequest requestBody);
 }

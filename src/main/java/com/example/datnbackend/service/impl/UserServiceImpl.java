@@ -331,6 +331,31 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    @Override
+    public void changePassword(ChangePasswordRequest requestBody) {
+        if(requestBody.getOldPassword() == null || requestBody.getOldPassword().isEmpty()){
+            throw new AppException("Password is not null or not empty");
+        }
+
+        if(requestBody.getNewPassword() == null || requestBody.getNewPassword().isEmpty()){
+            throw new AppException("Password is not null or not empty");
+        }
+
+        UserPrincipal userPrincipal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UserEntity userEntity = userRepository.findOneByIdAndDeletedFalse(userPrincipal.getId());
+
+        if(userEntity == null){
+            throw new AppException("Cannot found user");
+        }
+
+        if(!passwordEncoder.matches(requestBody.getOldPassword(), userEntity.getPassword())){
+            throw new AppException("Password is wrong");
+        }
+
+        userEntity.setPassword(passwordEncoder.encode(requestBody.getNewPassword()));
+        userRepository.save(userEntity);
+    }
+
 
     private Boolean checkAuthorities(List<String> compareAuthorities, UserPrincipal userPrincipal){
         for(String i : compareAuthorities){
