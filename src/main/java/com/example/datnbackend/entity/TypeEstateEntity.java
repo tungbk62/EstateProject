@@ -28,14 +28,14 @@ public class TypeEstateEntity {
     @Column(name = "created_date", nullable = false)
     private Date createdDate;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
     private UserEntity createdBy;
 
     @Column(name = "modified_date")
     private Date modifiedDate;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "modified_by")
     private UserEntity modifiedBy;
 

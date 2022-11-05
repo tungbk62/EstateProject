@@ -54,7 +54,7 @@
 
         <addForeignKeyConstraint baseTableName="user"
                                  baseColumnNames="wards_id"
-                                 constraintName="fk_user_wards"
+                                 constraintName="fk_user_wards_id"
                                  referencedTableName="wards"
                                  referencedColumnNames="id"
                                  onDelete="SET NULL"/>

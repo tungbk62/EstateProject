@@ -25,7 +25,7 @@
                 <constraints unique="true"/>
             </column>
             <column name="wards_id" type="int"/>
-            <column name="image_id" type="int"/>
+            <column name="image_url" type="varchar(500)"/>
             <column name="display_review" type="boolean">
                 <constraints nullable="false"/>
             </column>

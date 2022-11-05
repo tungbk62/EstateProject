@@ -87,7 +87,7 @@ public class TypeEstateServiceImpl implements TypeEstateService {
     private UserEntity getCurrentUser(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-        UserEntity userEntity = userRepository.findOneByIdAndDeletedFalse(userPrincipal.getId());
+        UserEntity userEntity = userRepository.findOneByIdAndDeletedFalseAndLockedFalse(userPrincipal.getId());
         if(userEntity == null){
             throw new AppException("Not found current user");
         }

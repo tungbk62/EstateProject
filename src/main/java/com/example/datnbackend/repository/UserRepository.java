@@ -45,5 +45,5 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
             ,nativeQuery = true)
     UserEntity findOneByIdAndDeletedFalseWithNormalRole(Long id);
     UserEntity findOneByIdAndDeletedFalse(Long id);
-    UserEntity findOneByIdAndPasswordAndDeletedFalse(Long id, String password);
+    UserEntity findOneByIdAndDeletedFalseAndLockedFalse(Long id);
 }

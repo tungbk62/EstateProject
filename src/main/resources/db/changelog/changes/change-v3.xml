@@ -75,5 +75,33 @@
                                  referencedColumnNames="id"
                                  onDelete="CASCADE"/>
 
+        <addForeignKeyConstraint baseTableName="type_estate"
+                                 baseColumnNames="created_by"
+                                 constraintName="fk_type_estate_created_by"
+                                 referencedTableName="user"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="type_estate"
+                                 baseColumnNames="modified_by"
+                                 constraintName="fk_type_estate_modified_by"
+                                 referencedTableName="user"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="type_report"
+                                 baseColumnNames="created_by"
+                                 constraintName="fk_type_report_created_by"
+                                 referencedTableName="user"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="type_report"
+                                 baseColumnNames="modified_by"
+                                 constraintName="fk_type_report_modified_by"
+                                 referencedTableName="user"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
     </changeSet>
 </databaseChangeLog>

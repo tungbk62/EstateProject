@@ -179,7 +179,7 @@ public class UserServiceImpl implements UserService {
             throw new AppException("You do not have role");
         }
 
-        UserEntity userEntity = userRepository.findOneByIdAndDeletedFalse(id);
+        UserEntity userEntity = userRepository.findOneByIdAndDeletedFalseAndLockedFalse(id);
         if(userEntity == null){
             throw new AppException("Not found user with id: " + id);
         }
@@ -231,7 +231,7 @@ public class UserServiceImpl implements UserService {
             throw new AppException("You do not have role");
         }
 
-        UserEntity userEntity = userRepository.findOneByIdAndDeletedFalse(id);
+        UserEntity userEntity = userRepository.findOneByIdAndDeletedFalseAndLockedFalse(id);
         if(userEntity == null){
             throw new AppException("Not found user with id: " + id);
         }
@@ -342,7 +342,7 @@ public class UserServiceImpl implements UserService {
         }
 
         UserPrincipal userPrincipal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        UserEntity userEntity = userRepository.findOneByIdAndDeletedFalse(userPrincipal.getId());
+        UserEntity userEntity = userRepository.findOneByIdAndDeletedFalseAndLockedFalse(userPrincipal.getId());
 
         if(userEntity == null){
             throw new AppException("Cannot found user");
@@ -355,7 +355,6 @@ public class UserServiceImpl implements UserService {
         userEntity.setPassword(passwordEncoder.encode(requestBody.getNewPassword()));
         userRepository.save(userEntity);
     }
-
 
     private Boolean checkAuthorities(List<String> compareAuthorities, UserPrincipal userPrincipal){
         for(String i : compareAuthorities){

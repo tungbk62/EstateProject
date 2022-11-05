@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+		 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+    <changeSet id="1" author="tungbk62">
+        <createTable tableName="post_report">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="post_id" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type_report_id" type="int"/>
+            <column name="email_report" type="varchar(250)"/>
+            <column name="phone_report" type="varchar(20)"/>
+            <column name="description" type="varchar(1000)"/>
+            <column name="admin_viewed" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+            <column name="admin_handled" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+            <column name="deleted" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_date" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        
+        <createTable tableName="post_image">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="url" type="varchar(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="main_image" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+            <column name="deleted" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+            <column name="post_id" type="int"/>
+        </createTable>
+
+        <createTable tableName="post_save">
+            <column name="user_id" type="int"/>
+            <column name="post_id" type="int"/>
+        </createTable>
+
+        <createTable tableName="post">
+            <column name="id" type="int">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="title" type="varchar(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="mediumtext">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type_estate_id" type="int"/>
+            <column name="wards_id" type="int"/>
+            <column name="address_detail" type="varchar(250)"/>
+            <column name="area" type="double"/>
+            <column name="price_month" type="double"/>
+            <column name="furniture" type="varchar(50)"/>
+            <column name="room" type="int"/>
+            <column name="bath_room" type="int"/>
+            <column name="deleted" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+            <column name="hide" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+            <column name="locked" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+            <column name="verified" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+            <column name="view" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_date" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified_date" type="datetime"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="post_report"
+                                 baseColumnNames="type_report_id"
+                                 constraintName="fk_post_report_type_report_id"
+                                 referencedTableName="type_report"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="post_report"
+                                 baseColumnNames="post_id"
+                                 constraintName="fk_post_report_post_id"
+                                 referencedTableName="post"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="post"
+                                 baseColumnNames="type_estate_id"
+                                 constraintName="fk_post_type_estate_id"
+                                 referencedTableName="type_estate"
+                                 referencedColumnNames="id"
+                                 onDelete="SET NULL"/>
+
+        <addForeignKeyConstraint baseTableName="post"
+                                 baseColumnNames="wards_id"
+                                 constraintName="fk_post_wards_id"
+                                 referencedTableName="wards"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="post"
+                                 baseColumnNames="created_by"
+                                 constraintName="fk_post_created_by"
+                                 referencedTableName="user"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="post_save"
+                                 baseColumnNames="user_id"
+                                 constraintName="fk_post_save_user_id"
+                                 referencedTableName="user"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="post_save"
+                                 baseColumnNames="post_id"
+                                 constraintName="fk_post_save_post_id"
+                                 referencedTableName="post"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="post_image"
+                                 baseColumnNames="post_id"
+                                 constraintName="fk_post_image_post_id"
+                                 referencedTableName="post"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+    </changeSet>
+</databaseChangeLog>
