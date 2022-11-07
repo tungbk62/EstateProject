@@ -5,11 +5,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Date;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -54,6 +53,9 @@ public class PostEntity {
     @Column(name = "bath_room")
     private Integer bathRoom;
 
+    @Column(name = "expired_date")
+    private LocalDateTime expiredDate;
+
     @Column(name = "deleted", nullable = false)
     private Boolean deleted;
 
@@ -74,14 +76,16 @@ public class PostEntity {
     private UserEntity createdBy;
 
     @Column(name = "created_date", nullable = false)
-    private Date createdDate;
+    private LocalDateTime createdDate;
 
     @Column(name = "modified_date")
-    private Date modifiedDate;
+    private LocalDateTime modifiedDate;
+
+    @OneToMany(mappedBy = "post")
+    private List<PostImageEntity> postImageList;
 
     @PrePersist
     void prePersist(){
-        LocalDateTime ldt = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC);
-        createdDate = Timestamp.valueOf(ldt);
+        createdDate = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC);
     }
 }

@@ -20,6 +20,9 @@ public class PostImageEntity {
     @Column(name = "url", nullable = false)
     private String url;
 
+    @Column(name = "main_image", nullable = false)
+    private Boolean mainImage;
+
     @Column(name = "deleted", nullable = false)
     private Boolean deleted;
 

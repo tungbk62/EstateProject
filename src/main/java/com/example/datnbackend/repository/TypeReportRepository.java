@@ -15,7 +15,7 @@ public interface TypeReportRepository extends JpaRepository<TypeReportEntity, Lo
     List<TypeReportEntity> findAllByIdIn(List<Long> ids);
 
     @Query(value = "DELETE FROM type_report t " +
-            "WHERE t.id IN ?1", nativeQuery = true)
+            "WHERE t.id IN (?1)", nativeQuery = true)
     @Modifying
     void deleteByIdIn(List<Long> ids);
 

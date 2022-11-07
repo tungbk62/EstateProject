@@ -5,13 +5,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.sql.Timestamp;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -39,7 +36,7 @@ public class UserEntity {
     private String lastName;
 
     @Column(name = "birthday")
-    private Date birthDay;
+    private LocalDate birthDay;
 
     @Column(name = "phone", unique = true)
     private String phone;
@@ -51,8 +48,8 @@ public class UserEntity {
     @JoinColumn(name = "wards_id")
     private WardsEntity wards;
 
-    @Column(name = "image_id")
-    private Long imageId;
+    @Column(name = "image_url")
+    private String imageUrl;
 
     @Column(name = "display_review", nullable = false)
     private Boolean displayReview;
@@ -64,7 +61,7 @@ public class UserEntity {
     private Boolean deleted;
 
     @Column(name = "created_date")
-    private Date createdDate;
+    private LocalDateTime createdDate;
 
     @ManyToMany(cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
     @JoinTable(
@@ -74,7 +71,7 @@ public class UserEntity {
     )
     private Set<RoleEntity> roles;
 
-    @ManyToMany(cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
+    @ManyToMany(cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     @JoinTable(
             name = "post_save",
             joinColumns = @JoinColumn(name = "user_id"),
@@ -84,8 +81,7 @@ public class UserEntity {
 
     @PrePersist
     public void prePersist() {
-        LocalDateTime ldt = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC);
-        createdDate = Timestamp.valueOf(ldt);
+        createdDate = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC);
     }
 
 

@@ -3,6 +3,7 @@ package com.example.datnbackend.security;
 import io.jsonwebtoken.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
@@ -12,11 +13,11 @@ import java.util.Date;
 public class JwtTokenProvider {
     private static final Logger logger = LoggerFactory.getLogger("JwtTokenProvider");
 
-    //    @Value("${app.jwtSecret}")
-    private final String jwtSecret = "9a02115a835ee03d5fb83cd8a468ea33e4090aaaec87f53c9fa54512bbef4db8dc656c82a315fa0c785c08b0134716b81ddcd0153d2a7556f2e154912cf5675f";
+    @Value("${app.jwtSecret}")
+    private String jwtSecret;
 
-    //    @Value("${app.jwtExpirationInMs}")
-    private final int jwtExpirationInMs = 6000000;
+    @Value("${app.jwtExpirationInMs}")
+    private int jwtExpirationInMs;
 
     public String generateToken(Authentication authentication) {
 

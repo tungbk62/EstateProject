@@ -27,7 +27,7 @@ public class TypeEstateController {
         }
     }
 
-    @GetMapping
+    @GetMapping(value = "/public")
     ResponseEntity<Object> getAllTypeEstate(@RequestParam(required = false) Integer page,
                                             @RequestParam(required = false) Integer size){
         try{

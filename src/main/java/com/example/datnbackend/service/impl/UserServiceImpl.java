@@ -3,6 +3,7 @@ package com.example.datnbackend.service.impl;
 import com.example.datnbackend.dto.exception.AppException;
 import com.example.datnbackend.dto.security.*;
 import com.example.datnbackend.dto.user.UserDescriptionAdminResponse;
+import com.example.datnbackend.dto.user.UserDetailAdminResponseRequest;
 import com.example.datnbackend.dto.user.UserDetailRequest;
 import com.example.datnbackend.dto.user.UserDetailResponse;
 import com.example.datnbackend.entity.RoleEntity;
@@ -75,7 +76,13 @@ public class UserServiceImpl implements UserService {
         UserEntity userEntity = new UserEntity();
         userEntity.setUsername(signupDTO.getUsername());
         userEntity.setPassword(passwordEncoder.encode(signupDTO.getPassword()));
+        if(signupDTO.getFirstName() == null || signupDTO.getFirstName().isEmpty()){
+            return new SecurityResponse(false, "Tên không được null hoặc trống");
+        }
         userEntity.setFirstName(signupDTO.getFirstName());
+        if(signupDTO.getLastName() == null || signupDTO.getLastName().isEmpty()){
+            return new SecurityResponse(false, "Tên không được null hoặc trống");
+        }
         userEntity.setLastName(signupDTO.getLastName());
         userEntity.setBirthDay(signupDTO.getBirthDay());
         userEntity.setEmail(signupDTO.getEmail());
@@ -196,17 +203,16 @@ public class UserServiceImpl implements UserService {
                 userEntity.getWards() == null ? null : userEntity.getWards().getName(),
                 null,
                 userEntity.getDisplayReview(),
-                userEntity.getLocked(),
                 userEntity.getCreatedDate());
     }
 
     @Override
-    public UserDetailResponse getUserDetailForAdmin(Long id) {
+    public UserDetailAdminResponseRequest getUserDetailForAdmin(Long id) {
         UserEntity userEntity = userRepository.findOneByIdAndDeletedFalseWithNormalRole(id);
         if(userEntity == null){
             throw new AppException("Not found user with id: " + id);
         }
-        return new UserDetailResponse(
+        return new UserDetailAdminResponseRequest(
                 userEntity.getId(),
                 userEntity.getUsername(),
                 userEntity.getFirstName(),
@@ -220,6 +226,7 @@ public class UserServiceImpl implements UserService {
                 null,
                 userEntity.getDisplayReview(),
                 userEntity.getLocked(),
+                userEntity.getDeleted(),
                 userEntity.getCreatedDate());
     }
 
@@ -286,7 +293,6 @@ public class UserServiceImpl implements UserService {
                 userEntity.getWards() == null ? null : userEntity.getWards().getName(),
                 null,
                 userEntity.getDisplayReview(),
-                userEntity.getLocked(),
                 userEntity.getCreatedDate());
     }
 

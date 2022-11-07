@@ -5,11 +5,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Date;
 
 @Data
 @NoArgsConstructor
@@ -49,11 +47,10 @@ public class PostReportEntity {
     private Boolean deleted;
 
     @Column(name = "created_date", nullable = false)
-    private Date createdDate;
+    private LocalDateTime createdDate;
 
     @PrePersist
     void prePersist(){
-        LocalDateTime ldt = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC);
-        createdDate = Timestamp.valueOf(ldt);
+        createdDate = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC);
     }
 }

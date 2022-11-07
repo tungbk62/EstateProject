@@ -13,7 +13,7 @@ public class AddressController {
     @Autowired
     AddressService addressService;
 
-    @GetMapping(value = "/province")
+    @GetMapping(value = "/public/province")
     ResponseEntity<Object> getAllProvince(){
         try{
             return ResponseEntity.ok(addressService.getAllProvince());
@@ -21,7 +21,7 @@ public class AddressController {
             return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
         }
     }
-    @GetMapping(value = "/province/{id}")
+    @GetMapping(value = "/public/province/{id}")
     ResponseEntity<Object> getProvinceDetail(@PathVariable(value = "id") Long id){
         try{
             return ResponseEntity.ok(addressService.getProvinceDetail(id));

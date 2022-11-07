@@ -27,7 +27,7 @@ public class TypeReportController {
         }
     }
 
-    @GetMapping
+    @GetMapping(value = "/public")
     ResponseEntity<Object> getAllTypeReport(@RequestParam(required = false) Integer page,
                                             @RequestParam(required = false) Integer size){
         try{

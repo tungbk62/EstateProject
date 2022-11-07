@@ -18,12 +18,12 @@ public class AuthController {
     @Autowired
     UserService userService;
 
-    @PostMapping(value = "/signup")
+    @PostMapping(value = "/public/signup")
     ResponseEntity<SecurityResponse> signup(@Valid @RequestBody UserSignupRequest signupDTO){
         return ResponseEntity.ok(userService.signup(signupDTO));
     }
 
-    @PostMapping(value = "/signin")
+    @PostMapping(value = "/public/signin")
     ResponseEntity<?> signin(@Valid @RequestBody UserSigninRequest signinDTO){
         return userService.signin(signinDTO);
     }

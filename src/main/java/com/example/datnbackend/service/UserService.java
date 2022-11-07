@@ -2,6 +2,7 @@ package com.example.datnbackend.service;
 
 import com.example.datnbackend.dto.security.*;
 import com.example.datnbackend.dto.user.UserDescriptionAdminResponse;
+import com.example.datnbackend.dto.user.UserDetailAdminResponseRequest;
 import com.example.datnbackend.dto.user.UserDetailRequest;
 import com.example.datnbackend.dto.user.UserDetailResponse;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +15,7 @@ public interface UserService {
     SecurityResponse signupAdmin(UserSignupAdminRequest signupDTO);
     List<UserDescriptionAdminResponse> getUserDescriptionForAdmin(Integer page, Integer size, String query);
     UserDetailResponse getUserDetail(Long id);
-    UserDetailResponse getUserDetailForAdmin(Long id);
+    UserDetailAdminResponseRequest getUserDetailForAdmin(Long id);
     UserDetailResponse updateUserDetail(Long id, UserDetailRequest requestBody);
     void lockUserAccount(Long id, Boolean locked);
     void displayReviewUserAccount(Long id, Boolean display);

@@ -16,7 +16,9 @@ public interface TypeEstateRepository extends JpaRepository<TypeEstateEntity, Lo
     List<TypeEstateEntity> findAllByIdIn(List<Long> ids);
 
     @Query(value = "DELETE FROM type_estate t " +
-            "WHERE t.id IN ?1", nativeQuery = true)
+            "WHERE t.id IN (?1)", nativeQuery = true)
     @Modifying
     void deleteByIdIn(List<Long> ids);
+
+    TypeEstateEntity findOneById(Long id);
 }

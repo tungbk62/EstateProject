@@ -12,4 +12,6 @@
     <include file="/db/changelog/changes/insert-wards.sql"/>
     <include file="/db/changelog/changes/change-v3.xml"/>
     <include file="/db/changelog/changes/change-v4.xml"/>
+    <include file="/db/changelog/changes/insert-super-admin.sql"/>
+    <include file="/db/changelog/changes/insert-super-admin-role.sql"/>
 </databaseChangeLog>
