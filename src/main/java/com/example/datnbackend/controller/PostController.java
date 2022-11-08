@@ -17,7 +17,8 @@ public class PostController {
     @Autowired
     PostService postService;
 
-    @PostMapping
+    @PostMapping(value = "/business")
+    @Secured("ROLE_BUSINESS")
     ResponseEntity<Object> createPost(@RequestBody PostCreateRequest requestBody){
         try{
             return ResponseEntity.ok(postService.createPost(requestBody));
@@ -26,7 +27,8 @@ public class PostController {
         }
     }
 
-    @PutMapping(value = "/{id}")
+    @PutMapping(value = "/business/{id}")
+    @Secured("ROLE_BUSINESS")
     ResponseEntity<Object> updatePost(@RequestBody PostCreateRequest requestBody,
                                       @PathVariable Long id){
         try{
@@ -65,7 +67,7 @@ public class PostController {
         }
     }
 
-    @PutMapping(value = "/hide/{id}")
+    @PutMapping(value = "/business/hide/{id}")
     @Secured("ROLE_BUSINESS")
     ResponseEntity<Object> hidePost(@PathVariable Long id,
                                     @RequestParam(value = "hide") Boolean hide){
@@ -77,7 +79,7 @@ public class PostController {
         }
     }
 
-    @DeleteMapping
+    @DeleteMapping(value = "/business")
     @Secured("ROLE_BUSINESS")
     ResponseEntity<Object> deleteMultiplePost(@RequestBody List<Long> ids){
         try{

@@ -23,13 +23,21 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
             "AND ((:district IS NULL) OR (d.id = :district)) " +
             "AND ((:wards IS NULL) OR (w.id = :wards)) " +
             "AND ((:address IS NULL) OR ( UPPER(p.address_detail) LIKE UPPER(CONCAT('%', :address ,'%')))) " +
-            "AND ((:type IS NULL) OR (p.type_estate_id IN (:type))) " +
+            "AND ((COALESCE(:type) IS NULL) OR (p.type_estate_id IN (:type))) " +
             "AND ((:room IS NULL) OR (p.room = :room)) " +
             "AND ((:pricemin IS NULL) OR (:pricemax IS NULL) OR ((p.price_month >= :pricemin) AND (p.price_month <= :pricemax))) " +
             "AND p.deleted = 0 AND p.locked = 0 AND p.hide = 0 " +
-            "ORDER BY p.created_date DESC",
-    nativeQuery = true)
-    List<PostEntity> findAllWithFilterWithDeletedFalseAndHideFalseAndLockedFalse(@Param("province") Long province, @Param("district") Long district,
+            "ORDER BY " +
+            "CASE WHEN :order IS NULL THEN NULL END, " +
+            "CASE WHEN :order = 'DATEASC' THEN p.created_date END ASC, " +
+            "CASE WHEN :order = 'DATEDESC' THEN p.created_date END DESC, " +
+            "CASE WHEN :order = 'PRICEASC' THEN p.price_month END ASC, " +
+            "CASE WHEN :order = 'PRICEDESC' THEN p.price_month END DESC, " +
+            "CASE WHEN :order = 'AREAASC' THEN p.area END ASC, " +
+            "CASE WHEN :order = 'AREADESC' THEN p.area END DESC"
+    ,nativeQuery = true)
+    List<PostEntity> findAllWithFilterWithDeletedFalseAndHideFalseAndLockedFalse(@Param("order") String order, @Param("province") Long province,
+                                                                                 @Param("district") Long district,
                                                                                  @Param("wards") Long wards, @Param("address") String address,
                                                                                  @Param("type") List<Long> type, @Param("room") Integer room,
                                                                                  @Param("pricemin") Double pricemin,

@@ -89,12 +89,13 @@ public class PostServiceImpl implements PostService {
         postEntity.setView(0);
         postEntity.setCreatedBy(getCurrentUser());
 
-        LocalDateTime currentTime = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC);
-        if(currentTime.plusHours(1).isAfter(requestBody.getExpiredDate())){
-            throw new AppException("Expired date phải sau thời gian hiện tại");
+        if(requestBody.getExpiredDate() != null){
+            LocalDateTime currentTime = getCurrentDateUTC();
+            if(currentTime.plusHours(1).isAfter(requestBody.getExpiredDate())){
+                throw new AppException("Expired date phải sau thời gian hiện tại");
+            }
         }
         postEntity.setExpiredDate(requestBody.getExpiredDate());
-
 
         postEntity = postRepository.save(postEntity);
 
@@ -179,9 +180,14 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public List<PostDescriptionResponse> getPostDescriptionList(Integer page, Integer size, String order, Long province, Long district, Long wards, String address, List<Long> type, Integer room, Double pricemin, Double pricemax) {
-//        Sort sort = Sort.by("modifiedDate").descending();
+        List<String> orderType = Arrays.asList("DATEASC", "DATEDESC", "PRICEASC", "PRICEDESC", "AREAASC", "AREADESC");
+        if(order == null || !orderType.contains(order.toUpperCase())){
+            order = null;
+        }else {
+            order = order.toUpperCase();
+        }
         Pageable pageable = PageRequest.of(page, size);
-        List<PostEntity> postEntityList = postRepository.findAllWithFilter(province, district, wards,
+        List<PostEntity> postEntityList = postRepository.findAllWithFilterWithDeletedFalseAndHideFalseAndLockedFalse(order, province, district, wards,
                 address, type, room, pricemin, pricemax, pageable);
 
         if(postEntityList.isEmpty()){

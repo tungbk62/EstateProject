@@ -94,6 +94,27 @@
             <column name="modified_date" type="datetime"/>
         </createTable>
 
+        <createTable tableName="contact_request">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="user_business_id" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email_contact" type="varchar(250)"/>
+            <column name="phone_contact" type="varchar(20)"/>
+            <column name="description" type="varchar(1000)"/>
+            <column name="business_viewed" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+            <column name="deleted" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_date" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
         <addForeignKeyConstraint baseTableName="post_report"
                                  baseColumnNames="type_report_id"
                                  constraintName="fk_post_report_type_report_id"
@@ -150,5 +171,11 @@
                                  referencedColumnNames="id"
                                  onDelete="CASCADE"/>
 
+        <addForeignKeyConstraint baseTableName="contact_request"
+                                 baseColumnNames="user_business_id"
+                                 constraintName="fk_contact_request_user_business_id"
+                                 referencedTableName="user"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
     </changeSet>
 </databaseChangeLog>
