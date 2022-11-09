@@ -13,14 +13,14 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
     @Query("SELECT u FROM UserEntity u WHERE u.username = ?1 AND u.deleted = FALSE")
-    Optional<UserEntity> findByUsernameWithDeletedIsFalse(String username);
+    Optional<UserEntity> findByUsernameWithDeletedFalse(String username);
     Boolean existsByUsername(String username);
     UserEntity findByEmail(String email);
     UserEntity findByPhone(String phone);
     @Query("SELECT u FROM UserEntity u WHERE u.username = ?1 AND u.locked = FALSE")
     UserEntity findByUsernameWithLockedIsFalse(String username);
-    @Query("SELECT u FROM UserEntity u WHERE u.id = ?1 AND u.deleted = FALSE")
-    Optional<UserEntity> findByIdWithDeletedIsFalse(Long id);
+    @Query("SELECT u FROM UserEntity u WHERE u.id = ?1 AND u.deleted = FALSE AND u.locked = FALSE")
+    Optional<UserEntity> findByIdWithDeletedFalseAndLockedFalse(Long id);
     @Query(value = "SELECT u.* FROM user u " +
             "JOIN user_role ur ON u.id = ur.user_id " +
             "JOIN role r ON r.id = ur.role_id " +
@@ -44,6 +44,14 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
             "AND u.id = ?1"
             ,nativeQuery = true)
     UserEntity findOneByIdAndDeletedFalseWithNormalRole(Long id);
+    @Query(value = "SELECT u.* FROM user u " +
+            "JOIN user_role ur ON u.id = ur.user_id " +
+            "JOIN role r ON r.id = ur.role_id " +
+            "WHERE r.name = 'ROLE_BUSINESS' " +
+            "AND u.deleted = 0 " +
+            "AND u.id = ?1"
+            ,nativeQuery = true)
+    UserEntity findOneByIdAndDeletedFalseWithRoleBusiness(Long id);
     UserEntity findOneByIdAndDeletedFalse(Long id);
     UserEntity findOneByIdAndDeletedFalseAndLockedFalse(Long id);
 }

@@ -30,11 +30,14 @@ public class ContactRequestEntity {
     @Column(name = "phone_contact")
     private String phoneContact;
 
-    @Column(name = "description")
-    private String description;
+    @Column(name = "message")
+    private String message;
 
-    @Column(name = "business_viewed", nullable = false)
-    private Boolean businessViewed;
+    @Column(name = "viewed", nullable = false)
+    private Boolean viewed;
+
+    @Column(name = "handled", nullable = false)
+    private Boolean handled;
 
     @Column(name = "deleted", nullable = false)
     private Boolean deleted;

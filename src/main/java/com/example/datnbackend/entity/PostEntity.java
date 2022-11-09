@@ -81,9 +81,6 @@ public class PostEntity {
     @Column(name = "modified_date")
     private LocalDateTime modifiedDate;
 
-    @OneToMany(mappedBy = "post")
-    private List<PostImageEntity> postImageList;
-
     @PrePersist
     void prePersist(){
         createdDate = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC);

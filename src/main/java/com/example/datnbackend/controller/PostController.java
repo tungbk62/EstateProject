@@ -45,15 +45,50 @@ public class PostController {
                                                   @RequestParam(required = false) Long province,
                                                   @RequestParam(required = false) Long district,
                                                   @RequestParam(required = false) Long wards,
-                                                  @RequestParam(required = false) String address,
                                                   @RequestParam(required = false) List<Long> type,
                                                   @RequestParam(required = false) Integer room,
                                                   @RequestParam(required = false) Double pricemin,
-                                                  @RequestParam(required = false) Double pricemax){
+                                                  @RequestParam(required = false) Double pricemax,
+                                                  @RequestParam(required = false) Double areamin,
+                                                  @RequestParam(required = false) Double areamax){
         try{
             return ResponseEntity.ok(postService.getPostDescriptionList(page, size, order, province, district, wards,
-                                                                        address, type, room, pricemin, pricemax));
+                    type, room, pricemin, pricemax, areamin, areamax));
         }catch(Exception e){
+            return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
+        }
+    }
+
+    @GetMapping(value = "/public/list/search")
+    ResponseEntity<Object> getPostDescriptionListSearch(@RequestParam Integer page,
+                                                        @RequestParam Integer size,
+                                                        @RequestParam(required = false) String order,
+                                                        @RequestParam(required = false) String search){
+        try{
+            return ResponseEntity.ok(postService.getPostDescriptionListSearch(page, size, order, search));
+        }catch(Exception e){
+            return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
+        }
+    }
+
+    @GetMapping(value = "/business/list")
+    @Secured("ROLE_BUSINESS")
+    ResponseEntity<Object> getPostDescriptionListForBusiness(@RequestParam Integer page,
+                                                             @RequestParam Integer size) {
+        try {
+            return ResponseEntity.ok(postService.getPostDescriptionListForBusiness(page, size));
+        } catch (Exception e) {
+            return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
+        }
+    }
+
+    @GetMapping(value = "/admin/list")
+    @Secured("ROLE_ADMIN")
+    ResponseEntity<Object> getPostDescriptionListForAdmin(@RequestParam Integer page,
+                                                          @RequestParam Integer size) {
+        try {
+            return ResponseEntity.ok(postService.getPostDescriptionListForAdmin(page, size));
+        } catch (Exception e) {
             return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
         }
     }
@@ -62,6 +97,26 @@ public class PostController {
     ResponseEntity<Object> getPostDetail(@PathVariable Long id){
         try{
             return ResponseEntity.ok(postService.getPostDetail(id));
+        }catch(Exception e){
+            return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
+        }
+    }
+
+    @GetMapping(value = "/admin/{id}")
+    @Secured("ROLE_ADMIN")
+    ResponseEntity<Object> getPostDetailForAdmin(@PathVariable Long id){
+        try{
+            return ResponseEntity.ok(postService.getPostDetailForAdmin(id));
+        }catch(Exception e){
+            return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
+        }
+    }
+
+    @GetMapping(value = "/business/{id}")
+    @Secured("ROLE_BUSINESS")
+    ResponseEntity<Object> getPostDetailForBusiness(@PathVariable Long id){
+        try{
+            return ResponseEntity.ok(postService.getPostDetailForBusiness(id));
         }catch(Exception e){
             return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
         }
@@ -110,6 +165,16 @@ public class PostController {
             postService.savePostToUser(id);
             return new ResponseEntity<>(new MainResponse(true, "Lưu tin thành công"), HttpStatus.OK);
         }catch (Exception e){
+            return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
+        }
+    }
+
+    @GetMapping(value = "/save/list")
+    ResponseEntity<Object> getDescriptionPostListSave(@RequestParam Integer page,
+                                                      @RequestParam Integer size){
+        try{
+            return ResponseEntity.ok(postService.getDescriptionPostListSave(page, size));
+        }catch(Exception e){
             return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
         }
     }

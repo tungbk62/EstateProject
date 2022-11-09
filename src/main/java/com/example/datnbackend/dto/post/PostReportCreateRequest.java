@@ -11,25 +11,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PostReportCreateRequest {
-    private Long id;
-    private String title;
+    private Long typeReport;
+    private String emailReport;
+    private String phoneReport;
     private String description;
-    private String typeEstate;
-    private String province;
-    private String district;
-    private String wards;
-    private String addressDetail;
-    private Double area;
-    private Double priceMonth;
-    private String furniture;
-    private Integer room;
-    private Integer bathRoom;
-    private Boolean deleted;
-    private Boolean hide;
-    private Boolean locked;
-    private Boolean verified;
-    private Integer view;
-    private UserDescriptionPostDetailResponse createdBy;
-    private LocalDateTime createdDate;
-    private LocalDateTime modifiedDate;
 }

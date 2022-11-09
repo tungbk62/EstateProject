@@ -40,8 +40,16 @@ public class ReviewEntity {
     @Column(name = "created_date", nullable = false)
     private LocalDateTime createdDate;
 
+    @Column(name = "modified_date")
+    private LocalDateTime modifiedDate;
+
     @PrePersist
     void prePersist(){
+        createdDate = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC);
+    }
+
+    @PreUpdate
+    void preUpdate(){
         createdDate = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC);
     }
 }

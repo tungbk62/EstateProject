@@ -37,11 +37,11 @@ public class PostReportEntity {
     @Column(name = "description")
     private String description;
 
-    @Column(name = "admin_viewed", nullable = false)
-    private Boolean adminViewed;
+    @Column(name = "viewed", nullable = false)
+    private Boolean viewed;
 
-    @Column(name = "admin_handled", nullable = false)
-    private Boolean adminHandled;
+    @Column(name = "handled", nullable = false)
+    private Boolean handled;
 
     @Column(name = "deleted", nullable = false)
     private Boolean deleted;

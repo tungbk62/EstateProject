@@ -23,7 +23,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username)
             throws UsernameNotFoundException {
         logger.info("loadUserByUsername");
-        UserEntity user = userRepository.findByUsernameWithDeletedIsFalse(username).orElseThrow(() ->
+        UserEntity user = userRepository.findByUsernameWithDeletedFalse(username).orElseThrow(() ->
                 new UsernameNotFoundException("User not found with username or email : " + username)
         );
 
@@ -34,7 +34,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Transactional
     public UserDetails loadUserById(Long id) {
         logger.info("loadUserById");
-        UserEntity user = userRepository.findByIdWithDeletedIsFalse(id).orElseThrow(
+        UserEntity user = userRepository.findByIdWithDeletedFalseAndLockedFalse(id).orElseThrow(
                 () -> new UsernameNotFoundException("User not found with id : " + id)
         );
 

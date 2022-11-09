@@ -16,10 +16,10 @@
             <column name="email_report" type="varchar(250)"/>
             <column name="phone_report" type="varchar(20)"/>
             <column name="description" type="varchar(1000)"/>
-            <column name="admin_viewed" type="boolean">
+            <column name="viewed" type="boolean">
                 <constraints nullable="false"/>
             </column>
-            <column name="admin_handled" type="boolean">
+            <column name="handled" type="boolean">
                 <constraints nullable="false"/>
             </column>
             <column name="deleted" type="boolean">
@@ -47,8 +47,12 @@
         </createTable>
 
         <createTable tableName="post_save">
-            <column name="user_id" type="int"/>
-            <column name="post_id" type="int"/>
+            <column name="user_id" type="int">
+                <constraints unique="true" uniqueConstraintName="post_save_unique"/>
+            </column>
+            <column name="post_id" type="int">
+                <constraints unique="true" uniqueConstraintName="post_save_unique"/>
+            </column>
         </createTable>
 
         <createTable tableName="post">
@@ -103,8 +107,11 @@
             </column>
             <column name="email_contact" type="varchar(250)"/>
             <column name="phone_contact" type="varchar(20)"/>
-            <column name="description" type="varchar(1000)"/>
-            <column name="business_viewed" type="boolean">
+            <column name="message" type="varchar(1000)"/>
+            <column name="viewed" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+            <column name="handled" type="boolean">
                 <constraints nullable="false"/>
             </column>
             <column name="deleted" type="boolean">

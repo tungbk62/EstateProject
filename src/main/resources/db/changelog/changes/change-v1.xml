@@ -48,8 +48,12 @@
         </createTable>
 
         <createTable tableName="user_role">
-            <column name="user_id" type="int"/>
-            <column name="role_id" type="int"/>
+            <column name="user_id" type="int">
+                <constraints unique="true" uniqueConstraintName="user_role_unique"/>
+            </column>
+            <column name="role_id" type="int">
+                <constraints unique="true" uniqueConstraintName="user_role_unique"/>
+            </column>
         </createTable>
 
         <addForeignKeyConstraint baseTableName="user_role"

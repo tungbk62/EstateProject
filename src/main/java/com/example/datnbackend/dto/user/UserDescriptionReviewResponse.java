@@ -7,11 +7,10 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserDescriptionAdminResponse {
+public class UserDescriptionReviewResponse {
     private Long id;
     private String username;
     private String firstName;
     private String lastName;
-    private Boolean displayReview;
-    private Boolean locked;
+    private String imageUrl;
 }

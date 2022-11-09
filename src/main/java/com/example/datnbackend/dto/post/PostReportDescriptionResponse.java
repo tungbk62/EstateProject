@@ -12,24 +12,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class PostReportDescriptionResponse {
     private Long id;
-    private String title;
-    private String description;
-    private String typeEstate;
-    private String province;
-    private String district;
-    private String wards;
-    private String addressDetail;
-    private Double area;
-    private Double priceMonth;
-    private String furniture;
-    private Integer room;
-    private Integer bathRoom;
-    private Boolean deleted;
-    private Boolean hide;
-    private Boolean locked;
-    private Boolean verified;
-    private Integer view;
-    private UserDescriptionPostDetailResponse createdBy;
-    private LocalDateTime createdDate;
-    private LocalDateTime modifiedDate;
+    private String typeReportName;
+    private String emailReport;
+    private String phoneReport;
+    private Boolean viewed;
+    private Boolean handled;
 }

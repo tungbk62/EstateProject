@@ -44,7 +44,7 @@
                 <constraints primaryKey="true"/>
             </column>
             <column name="user_business_id" type="int">
-                <constraints nullable="false"/>
+                <constraints nullable="false" unique="true" uniqueConstraintName="review_unique"/>
             </column>
             <column name="description" type="varchar(1000)"/>
             <column name="rating_point" type="tinyint">
@@ -54,11 +54,12 @@
                 <constraints nullable="false"/>
             </column>
             <column name="created_by" type="int">
-                <constraints nullable="false"/>
+                <constraints nullable="false" unique="true" uniqueConstraintName="review_unique"/>
             </column>
             <column name="created_date" type="datetime">
                 <constraints nullable="false"/>
             </column>
+            <column name="modified_date" type="datetime"/>
         </createTable>
 
         <addForeignKeyConstraint baseTableName="review"

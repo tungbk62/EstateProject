@@ -1,9 +1,7 @@
 package com.example.datnbackend.service.impl;
 
 import com.example.datnbackend.dto.exception.AppException;
-import com.example.datnbackend.dto.post.PostCreateRequest;
-import com.example.datnbackend.dto.post.PostDescriptionResponse;
-import com.example.datnbackend.dto.post.PostDetailResponse;
+import com.example.datnbackend.dto.post.*;
 import com.example.datnbackend.dto.user.UserDescriptionPostDetailResponse;
 import com.example.datnbackend.entity.*;
 import com.example.datnbackend.repository.*;
@@ -12,7 +10,6 @@ import com.example.datnbackend.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -39,9 +36,11 @@ public class PostServiceImpl implements PostService {
     WardsRepository wardsRepository;
     @Autowired
     ReviewRepository reviewRepository;
+    @Autowired
+    PostImageRepository postImageRepository;
 
     @Override
-    public PostDetailResponse createPost(PostCreateRequest requestBody) {
+    public PostDetailForBusinessResponse createPost(PostCreateRequest requestBody) {
         if(requestBody.getTitle() == null || requestBody.getTitle().isEmpty()){
             throw new AppException("Title không được null hoặc trống");
         }
@@ -87,7 +86,7 @@ public class PostServiceImpl implements PostService {
         postEntity.setLocked(false);
         postEntity.setVerified(false);
         postEntity.setView(0);
-        postEntity.setCreatedBy(getCurrentUser());
+        postEntity.setCreatedBy(getCurrentUserEntity());
 
         if(requestBody.getExpiredDate() != null){
             LocalDateTime currentTime = getCurrentDateUTC();
@@ -99,25 +98,26 @@ public class PostServiceImpl implements PostService {
 
         postEntity = postRepository.save(postEntity);
 
-        return new PostDetailResponse(postEntity.getId(), postEntity.getTitle(), postEntity.getDescription(),
+
+        return new PostDetailForBusinessResponse(postEntity.getId(), postEntity.getTitle(), postEntity.getDescription(),
                 postEntity.getTypeEstate().getName(), postEntity.getWards().getDistrict().getProvince().getName(),
                 postEntity.getWards().getDistrict().getName(), postEntity.getWards().getName(), postEntity.getAddressDetail(),
                 postEntity.getArea(), postEntity.getPriceMonth(), postEntity.getFurniture(), postEntity.getRoom(),
                 postEntity.getBathRoom(), postEntity.getExpiredDate(), postEntity.getDeleted(), postEntity.getHide(),
-                postEntity.getLocked(), postEntity.getVerified(), postEntity.getView(),
+                postEntity.getLocked(), postEntity.getVerified(), postEntity.getView(), getPostImageListByPostId(postEntity.getId()),
                 convertEntityToDescriptionPostDetailResponse(postEntity.getCreatedBy()), postEntity.getCreatedDate(),
                 postEntity.getModifiedDate());
     }
 
     @Override
-    public PostDetailResponse updatePost(Long id, PostCreateRequest requestBody) {
+    public PostDetailForBusinessResponse updatePost(Long id, PostCreateRequest requestBody) {
         PostEntity postEntity = postRepository.findOneByIdAndDeletedFalseAndLockedFalse(id);
 
         if(postEntity == null){
             throw new AppException("Không tìm thấy bài đăng với id: " + id);
         }
 
-        if(getCurrentUser().getId() != postEntity.getCreatedBy().getId()){
+        if(getCurrentUserEntity().getId() != postEntity.getCreatedBy().getId()){
             throw new AppException("Không có quyền chỉnh sửa bài đăng này");
         }
 
@@ -168,18 +168,21 @@ public class PostServiceImpl implements PostService {
         postEntity.setModifiedDate(getCurrentDateUTC());
 
         postEntity = postRepository.save(postEntity);
-        return new PostDetailResponse(postEntity.getId(), postEntity.getTitle(), postEntity.getDescription(),
+        return new PostDetailForBusinessResponse(postEntity.getId(), postEntity.getTitle(), postEntity.getDescription(),
                 postEntity.getTypeEstate().getName(), postEntity.getWards().getDistrict().getProvince().getName(),
                 postEntity.getWards().getDistrict().getName(), postEntity.getWards().getName(), postEntity.getAddressDetail(),
                 postEntity.getArea(), postEntity.getPriceMonth(), postEntity.getFurniture(), postEntity.getRoom(),
                 postEntity.getBathRoom(), postEntity.getExpiredDate(), postEntity.getDeleted(), postEntity.getHide(),
-                postEntity.getLocked(), postEntity.getVerified(), postEntity.getView(),
+                postEntity.getLocked(), postEntity.getVerified(), postEntity.getView(), getPostImageListByPostId(postEntity.getId()),
                 convertEntityToDescriptionPostDetailResponse(postEntity.getCreatedBy()), postEntity.getCreatedDate(),
                 postEntity.getModifiedDate());
     }
 
     @Override
-    public List<PostDescriptionResponse> getPostDescriptionList(Integer page, Integer size, String order, Long province, Long district, Long wards, String address, List<Long> type, Integer room, Double pricemin, Double pricemax) {
+    public List<PostDescriptionResponse> getPostDescriptionList(Integer page, Integer size, String order,
+                                                                Long province, Long district, Long wards,
+                                                                List<Long> type, Integer room, Double pricemin,
+                                                                Double pricemax, Double areamin, Double areamax) {
         List<String> orderType = Arrays.asList("DATEASC", "DATEDESC", "PRICEASC", "PRICEDESC", "AREAASC", "AREADESC");
         if(order == null || !orderType.contains(order.toUpperCase())){
             order = null;
@@ -188,14 +191,67 @@ public class PostServiceImpl implements PostService {
         }
         Pageable pageable = PageRequest.of(page, size);
         List<PostEntity> postEntityList = postRepository.findAllWithFilterWithDeletedFalseAndHideFalseAndLockedFalse(order, province, district, wards,
-                address, type, room, pricemin, pricemax, pageable);
+                 type, room, pricemin, pricemax, areamin, areamax, pageable);
 
         if(postEntityList.isEmpty()){
             return Collections.emptyList();
         }
-        List<PostDescriptionResponse> postDescriptionResponseList = postEntityList.stream()
+        return postEntityList.stream()
                 .map(o -> convertPostEntityToPostDescription(o)).collect(Collectors.toList());
-        return postDescriptionResponseList;
+    }
+
+    @Override
+    public List<PostDescriptionResponse> getPostDescriptionListSearch(Integer page, Integer size, String order, String search) {
+        List<String> orderType = Arrays.asList("DATEASC", "DATEDESC", "PRICEASC", "PRICEDESC", "AREAASC", "AREADESC");
+        if(order == null || !orderType.contains(order.toUpperCase())){
+            order = null;
+        }else {
+            order = order.toUpperCase();
+        }
+        Pageable pageable = PageRequest.of(page, size);
+        if(search == null || search.isEmpty()){
+            search = null;
+        }else {
+            search = search.toUpperCase();
+        }
+
+        List<PostEntity> postEntityList = postRepository
+                .findAllWithSearchWithDeletedFalseAndHideFalseAndLockedFalse(order, search, pageable);
+
+        if(postEntityList.isEmpty()){
+            postEntityList = postRepository.findAllWithFilterWithDeletedFalseAndHideFalseAndLockedFalse(order, null,
+                    null, null, null, null, null, null, null, null, pageable);
+        }
+
+        if(postEntityList.isEmpty()){
+            return Collections.emptyList();
+        }
+        return postEntityList.stream()
+                .map(o -> convertPostEntityToPostDescription(o)).collect(Collectors.toList());
+    }
+
+
+    @Override
+    public List<PostDescriptionForAdminBusinessResponse> getPostDescriptionListForBusiness(Integer page, Integer size) {
+        UserEntity currentUser = getCurrentUserEntity();
+        Pageable pageable = PageRequest.of(page, size);
+        List<PostEntity> postEntityList = postRepository.findAllByCreatedByIdAndDeletedFalse(currentUser.getId(), pageable);
+        if(postEntityList.isEmpty()){
+            return Collections.emptyList();
+        }
+        return postEntityList.stream()
+                .map(o -> convertPostEntityToPostDescriptionForAdminBusiness(o)).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<PostDescriptionForAdminBusinessResponse> getPostDescriptionListForAdmin(Integer page, Integer size) {
+        Pageable pageable = PageRequest.of(page, size);
+        List<PostEntity> postEntityList = postRepository.findAllByDeletedFalse(pageable);
+        if(postEntityList.isEmpty()){
+            return Collections.emptyList();
+        }
+        return postEntityList.stream()
+                .map(o -> convertPostEntityToPostDescriptionForAdminBusiness(o)).collect(Collectors.toList());
     }
 
 
@@ -210,16 +266,54 @@ public class PostServiceImpl implements PostService {
                 postEntity.getTypeEstate().getName(), postEntity.getWards().getDistrict().getProvince().getName(),
                 postEntity.getWards().getDistrict().getName(), postEntity.getWards().getName(), postEntity.getAddressDetail(),
                 postEntity.getArea(), postEntity.getPriceMonth(), postEntity.getFurniture(), postEntity.getRoom(),
-                postEntity.getBathRoom(), postEntity.getExpiredDate(), postEntity.getDeleted(), postEntity.getHide(),
-                postEntity.getLocked(), postEntity.getVerified(), postEntity.getView(),
-                convertEntityToDescriptionPostDetailResponse(postEntity.getCreatedBy()), postEntity.getCreatedDate(),
-                postEntity.getModifiedDate());
+                postEntity.getBathRoom(), postEntity.getExpiredDate(), postEntity.getVerified(), postEntity.getView(),
+                getPostImageListByPostId(postEntity.getId()), convertEntityToDescriptionPostDetailResponse(postEntity.getCreatedBy()),
+                postEntity.getCreatedDate(), postEntity.getModifiedDate());
 
         Integer view = postEntity.getView() + 1;
         postEntity.setView(view);
         postRepository.save(postEntity);
 
         return postDetailResponse;
+    }
+
+    @Override
+    public PostDetailForAdminResponse getPostDetailForAdmin(Long id) {
+        PostEntity postEntity = postRepository.findOneByIdAndDeletedFalse(id);
+        if(postEntity == null){
+            throw new AppException("Không tìm thấy bài đăng với id: " + id);
+        }
+
+        return new PostDetailForAdminResponse(postEntity.getId(), postEntity.getTitle(), postEntity.getDescription(),
+                postEntity.getTypeEstate().getName(), postEntity.getWards().getDistrict().getProvince().getName(),
+                postEntity.getWards().getDistrict().getName(), postEntity.getWards().getName(), postEntity.getAddressDetail(),
+                postEntity.getArea(), postEntity.getPriceMonth(), postEntity.getFurniture(), postEntity.getRoom(),
+                postEntity.getBathRoom(), postEntity.getExpiredDate(), postEntity.getDeleted(), postEntity.getHide(),
+                postEntity.getLocked(), postEntity.getVerified(), postEntity.getView(), getPostImageListByPostId(postEntity.getId()),
+                convertEntityToDescriptionPostDetailResponse(postEntity.getCreatedBy()), postEntity.getCreatedDate(),
+                postEntity.getModifiedDate());
+    }
+
+    @Override
+    public PostDetailForBusinessResponse getPostDetailForBusiness(Long id) {
+        UserEntity userEntity = getCurrentUserEntity();
+
+        PostEntity postEntity = postRepository.findOneByIdAndDeletedFalse(id);
+        if(postEntity == null){
+            throw new AppException("Không tìm thấy bài đăng với id: " + id);
+        }
+
+        if(userEntity.getId() != postEntity.getCreatedBy().getId()){
+            throw new AppException("Không có quyền truy cập bài đăng này");
+        }
+        return new PostDetailForBusinessResponse(postEntity.getId(), postEntity.getTitle(), postEntity.getDescription(),
+                postEntity.getTypeEstate().getName(), postEntity.getWards().getDistrict().getProvince().getName(),
+                postEntity.getWards().getDistrict().getName(), postEntity.getWards().getName(), postEntity.getAddressDetail(),
+                postEntity.getArea(), postEntity.getPriceMonth(), postEntity.getFurniture(), postEntity.getRoom(),
+                postEntity.getBathRoom(), postEntity.getExpiredDate(), postEntity.getDeleted(), postEntity.getHide(),
+                postEntity.getLocked(), postEntity.getVerified(), postEntity.getView(), getPostImageListByPostId(postEntity.getId()),
+                convertEntityToDescriptionPostDetailResponse(postEntity.getCreatedBy()), postEntity.getCreatedDate(),
+                postEntity.getModifiedDate());
     }
 
 
@@ -230,7 +324,7 @@ public class PostServiceImpl implements PostService {
             throw new AppException("Không tìm thấy bài đăng với id: " + id);
         }
 
-        if(getCurrentUser().getId() != postEntity.getCreatedBy().getId()){
+        if(getCurrentUserEntity().getId() != postEntity.getCreatedBy().getId()){
             throw new AppException("Không có quyền chỉnh sửa bài đăng này");
         }
 
@@ -241,7 +335,7 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional
     public void deleteMultiplePost(List<Long> ids) {
-        Long id = getCurrentUser().getId();
+        Long id = getCurrentUserEntity().getId();
         for(Long i : ids){
             PostEntity postEntity = postRepository.findOneByIdAndDeletedFalse(i);
             if(postEntity == null){
@@ -277,7 +371,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void savePostToUser(Long id) {
-        UserEntity currentUser = getCurrentUser();
+        UserEntity currentUser = getCurrentUserEntity();
         PostEntity postEntity = postRepository.findOneByIdAndDeletedFalseAndHideFalseAndLockedFalse(id);
         if(postEntity == null){
             throw new AppException("Not found post with id: " + id);
@@ -289,7 +383,21 @@ public class PostServiceImpl implements PostService {
         userRepository.save(currentUser);
     }
 
-    private UserEntity getCurrentUser(){
+    @Override
+    public List<PostDescriptionResponse> getDescriptionPostListSave(Integer page, Integer size) {
+        UserEntity userEntity = getCurrentUserEntity();
+        Pageable pageable = PageRequest.of(page, size);
+        List<PostEntity> postEntityList = postRepository.findAllByUserIdWithDeletedFalseAndHideFalseAndLockedFalse(userEntity.getId(), pageable);
+
+        if(postEntityList.isEmpty()){
+            return Collections.emptyList();
+        }
+        return postEntityList.stream()
+                .map(o -> convertPostEntityToPostDescription(o)).collect(Collectors.toList());
+    }
+
+
+    private UserEntity getCurrentUserEntity(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
         UserEntity userEntity = userRepository.findOneByIdAndDeletedFalseAndLockedFalse(userPrincipal.getId());
@@ -318,7 +426,7 @@ public class PostServiceImpl implements PostService {
         UserDescriptionPostDetailResponse userDescriptionPostDetailResponse = new UserDescriptionPostDetailResponse();
         List<ReviewEntity> reviewEntityList = reviewRepository.findAllByUserBusinessIdAndDeletedFalse(userEntity.getId());
         Integer totalPoint = 0;
-        if(reviewEntityList.isEmpty()){
+        if(reviewEntityList.isEmpty() || !userEntity.getDisplayReview()){
             userDescriptionPostDetailResponse.setRatingPoint(null);
         }else {
             for(ReviewEntity r : reviewEntityList){
@@ -337,7 +445,7 @@ public class PostServiceImpl implements PostService {
     }
 
     private PostDescriptionResponse convertPostEntityToPostDescription(PostEntity postEntity){
-        List<PostImageEntity> postImageEntityList = postEntity.getPostImageList();
+        List<PostImageEntity> postImageEntityList = postImageRepository.findAllByPostIdAndDeletedFalse(postEntity.getId());
         PostImageEntity mainImageEntity;
         if(!postImageEntityList.isEmpty()){
             mainImageEntity = postImageEntityList.stream().filter(o -> o.getMainImage() == true).findFirst().get();
@@ -350,5 +458,23 @@ public class PostServiceImpl implements PostService {
                 postEntity.getCreatedBy().getFirstName() + " " + postEntity.getCreatedBy().getLastName(),
                 postImageEntityList.isEmpty() ? 1 : postImageEntityList.size(),  mainImageEntity == null ? null : mainImageEntity.getUrl(),
                 postEntity.getCreatedDate());
+    }
+
+    private PostDescriptionForAdminBusinessResponse convertPostEntityToPostDescriptionForAdminBusiness(PostEntity postEntity){
+        PostImageEntity postImageEntity = postImageRepository.findAllByPostIdAndDeletedFalseAndMainImageFalse(postEntity.getId());
+        return new PostDescriptionForAdminBusinessResponse(postEntity.getId(), postEntity.getTitle(), postEntity.getTypeEstate().getName(),
+                postEntity.getWards().getDistrict().getProvince().getName(), postEntity.getWards().getDistrict().getName(),
+                postEntity.getWards().getName(), postEntity.getExpiredDate(), postEntity.getDeleted(), postEntity.getHide(), postEntity.getLocked(),
+                postEntity.getVerified(), postEntity.getCreatedBy().getFirstName() + " " + postEntity.getCreatedBy().getLastName(),
+                postImageEntity == null ? null : postImageEntity.getUrl(), postEntity.getCreatedDate());
+    }
+
+    private List<PostImageResponse> getPostImageListByPostId(Long id){
+        List<PostImageEntity> postImageEntityList = postImageRepository.findAllByPostIdAndDeletedFalse(id);
+        if(postImageEntityList.isEmpty()){
+            return Collections.emptyList();
+        }
+        return postImageEntityList.stream()
+                    .map(o -> new PostImageResponse(o.getId(), o.getUrl(), o.getMainImage())).collect(Collectors.toList());
     }
 }

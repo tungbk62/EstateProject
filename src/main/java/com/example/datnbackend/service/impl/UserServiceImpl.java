@@ -62,7 +62,7 @@ public class UserServiceImpl implements UserService {
             return new ResponseEntity<>(new SecurityResponse(false, "Your account is locked"), HttpStatus.FORBIDDEN);
         }
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+//        SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String jwt = jwtTokenProvider.generateToken(authentication);
         return ResponseEntity.ok(new JwtAuthenticationResponse(jwt));
@@ -173,7 +173,7 @@ public class UserServiceImpl implements UserService {
         }
 
         userDescriptionAdminResponseList = userEntityList.stream().map(o -> new UserDescriptionAdminResponse(
-                o.getId(), o.getUsername(), o.getDisplayReview(), o.getLocked()
+                o.getId(), o.getUsername(), o.getFirstName(), o.getLastName(), o.getDisplayReview(), o.getLocked()
         )).collect(Collectors.toList());
 
         return userDescriptionAdminResponseList;
