@@ -16,9 +16,6 @@
             <column name="email_report" type="varchar(250)"/>
             <column name="phone_report" type="varchar(20)"/>
             <column name="description" type="varchar(1000)"/>
-            <column name="viewed" type="boolean">
-                <constraints nullable="false"/>
-            </column>
             <column name="handled" type="boolean">
                 <constraints nullable="false"/>
             </column>
@@ -28,6 +25,7 @@
             <column name="created_date" type="datetime">
                 <constraints nullable="false"/>
             </column>
+            <column name="handled_by" type="int"/>
         </createTable>
         
         <createTable tableName="post_image">
@@ -48,10 +46,10 @@
 
         <createTable tableName="post_save">
             <column name="user_id" type="int">
-                <constraints unique="true" uniqueConstraintName="post_save_unique"/>
+                <constraints nullable="false" unique="true" uniqueConstraintName="post_save_unique"/>
             </column>
             <column name="post_id" type="int">
-                <constraints unique="true" uniqueConstraintName="post_save_unique"/>
+                <constraints nullable="false" unique="true" uniqueConstraintName="post_save_unique"/>
             </column>
         </createTable>
 
@@ -135,6 +133,13 @@
                                  referencedTableName="post"
                                  referencedColumnNames="id"
                                  onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="post_report"
+                                 baseColumnNames="handled_by"
+                                 constraintName="fk_post_report_handled_by"
+                                 referencedTableName="user"
+                                 referencedColumnNames="id"
+                                 onDelete="SET NULL"/>
 
         <addForeignKeyConstraint baseTableName="post"
                                  baseColumnNames="type_estate_id"

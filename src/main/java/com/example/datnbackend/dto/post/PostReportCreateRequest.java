@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PostReportCreateRequest {
-    private Long typeReport;
+    private Long typeReportId;
     private String emailReport;
     private String phoneReport;
     private String description;

@@ -17,10 +17,14 @@ public interface ContactRequestRepository extends JpaRepository<ContactRequestEn
             "AND ((:handled IS NULL) OR (cr.handled = :handled)) " +
             "ORDER BY " +
             "CASE WHEN :order IS NULL THEN NULL END, " +
-            "CASE WHEN :order IS 'DATEDESC' THEN cr.created_date END DESC")
+            "CASE WHEN :order IS 'DATEDESC' THEN cr.created_date END DESC", nativeQuery = true)
     List<ContactRequestEntity> findAllByUserBusinessIdAndFilter(@Param("id") Long id,
                                                                 @Param("order") String order,
                                                                 @Param("viewed") Integer viewed,
                                                                 @Param("handled") Integer handled, Pageable pageable);
-    ContactRequestEntity findOneByIdWithDeletedFalse(Long id);
+    ContactRequestEntity findOneByIdAndDeletedFalse(Long id);
+    @Query(value = "SELECT cr.* FROM contact_request cr " +
+            "WHERE cr.user_business_id = ?2 AND cr.deleted = 0 " +
+            "AND cr.id IN (?1)", nativeQuery = true)
+    List<ContactRequestEntity> findAllByIdInAndUserBusinessIdAndDeletedFalse(List<Long> ids, Long userId);
 }

@@ -23,4 +23,8 @@ public interface ReviewRepository extends JpaRepository<ReviewEntity, Long> {
     List<ReviewEntity> findAllByUserBusinessIdAndDeletedFalseWithPaging(Long id, String order, Pageable pageable);
 
     ReviewEntity findOneByIdAndDeletedFalse(Long id);
+    @Query(value = "SELECT * FROM review r " +
+            "WHERE r.deleted = 0 " +
+            "AND r.id IN (?1)", nativeQuery = true)
+    List<ReviewEntity> findAllByIdInAndDeletedFalse(List<Long> ids);
 }

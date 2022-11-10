@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping(value = "/review")
 public class ReviewController {
@@ -43,6 +45,17 @@ public class ReviewController {
                                          @RequestParam Long id){
         try{
             return ResponseEntity.ok(reviewService.getReviewList(page, size, order, id));
+        }catch(Exception e){
+            return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
+        }
+    }
+
+    @DeleteMapping(value = "/admin")
+    @Secured("ROLE_ADMIN")
+    ResponseEntity<Object> deleteReview(@RequestBody List<Long> ids){
+        try{
+            reviewService.deleteReview(ids);
+            return new ResponseEntity<>(new MainResponse(true, "Xoá thành công"), HttpStatus.OK);
         }catch(Exception e){
             return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
         }

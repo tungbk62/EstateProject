@@ -37,9 +37,6 @@ public class PostReportEntity {
     @Column(name = "description")
     private String description;
 
-    @Column(name = "viewed", nullable = false)
-    private Boolean viewed;
-
     @Column(name = "handled", nullable = false)
     private Boolean handled;
 
@@ -48,6 +45,10 @@ public class PostReportEntity {
 
     @Column(name = "created_date", nullable = false)
     private LocalDateTime createdDate;
+
+    @ManyToOne
+    @JoinColumn(name = "handled_by")
+    private UserEntity handledBy;
 
     @PrePersist
     void prePersist(){

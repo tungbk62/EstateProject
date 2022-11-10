@@ -15,6 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
@@ -100,6 +101,26 @@ public class ReviewServiceImpl implements ReviewService {
         }
         return reviewEntityList.stream().map(o -> convertEntityToResponse(o)).collect(Collectors.toList());
     }
+
+    @Override
+    @Transactional
+    public void deleteReview(List<Long> ids) {
+        if(ids == null || ids.isEmpty()){
+            throw new AppException("Xoá không thành công");
+        }
+
+        List<ReviewEntity> reviewEntityList = reviewRepository.findAllByIdInAndDeletedFalse(ids);
+        if(reviewEntityList.size() != ids.size()){
+            throw new AppException("Xoá không thành công");
+        }
+
+        for(ReviewEntity i : reviewEntityList){
+            i.setDeleted(true);
+            reviewRepository.save(i);
+        }
+
+    }
+
 
     private UserEntity getCurrentUserEntity(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

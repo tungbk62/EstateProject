@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping(value = "/contact")
 public class ContactRequestController {
@@ -57,6 +59,17 @@ public class ContactRequestController {
         try{
             contactService.changeStateHandled(id, handled);
             return new ResponseEntity<>(new MainResponse(true, "Thay đổi thành công"), HttpStatus.OK);
+        }catch(Exception e){
+            return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
+        }
+    }
+
+    @DeleteMapping(value = "/business")
+    @Secured("ROLE_BUSINESS")
+    ResponseEntity<Object> deleteContactRequest(@RequestBody List<Long> ids){
+        try{
+            contactService.deleteContactRequest(ids);
+            return new ResponseEntity<>(new MainResponse(true, "Xoá thành công"), HttpStatus.OK);
         }catch(Exception e){
             return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
         }

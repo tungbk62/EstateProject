@@ -19,4 +19,6 @@ public interface TypeReportRepository extends JpaRepository<TypeReportEntity, Lo
     @Modifying
     void deleteByIdIn(List<Long> ids);
 
+    TypeReportEntity findOneById(Long id);
+
 }

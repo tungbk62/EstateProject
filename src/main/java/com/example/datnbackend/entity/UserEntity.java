@@ -71,14 +71,6 @@ public class UserEntity {
     )
     private Set<RoleEntity> roles;
 
-    @ManyToMany(cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "post_save",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "post_id")
-    )
-    private List<PostEntity> postSave;
-
     @PrePersist
     public void prePersist() {
         createdDate = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC);

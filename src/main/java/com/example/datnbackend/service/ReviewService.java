@@ -9,4 +9,5 @@ public interface ReviewService {
     ReviewResponse createReview(Long id, ReviewCreateRequest requestBody);
     ReviewResponse updateReview(Long id, ReviewCreateRequest requestBody);
     List<ReviewResponse> getReviewList(Integer page, Integer size, String order, Long id);
+    void deleteReview(List<Long> ids);
 }

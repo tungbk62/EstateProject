@@ -21,4 +21,10 @@ public interface PostService {
     void changeStateOfHideLockedVerified(Long id, Boolean hide, Boolean locked, Boolean verified);
     void savePostToUser(Long id);
     List<PostDescriptionResponse> getDescriptionPostListSave(Integer page, Integer size);
+    void deletePostSave(List<Long> ids);
+    PostReportDetailResponse createPostReport(Long id, PostReportCreateRequest requestBody);
+    List<PostReportDescriptionResponse> getPostReportList(Integer page, Integer size, String order, Long postId, Long typeId, Long userId, Boolean viewed, Boolean handled);
+    PostReportDetailResponse getPostReportDetail(Long id);
+    void changeHandledState(Long id, Boolean handled);
+    void deletePostReport(List<Long> ids);
 }

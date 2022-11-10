@@ -11,4 +11,5 @@ public interface ContactService {
     List<ContactDescriptionResponse> getContactList(Integer page, Integer size, String order, Boolean viewed, Boolean handled);
     ContactDetailResponse getContactDetail(Long id);
     void changeStateHandled(Long id, Boolean handled);
+    void deleteContactRequest(List<Long> ids);
 }

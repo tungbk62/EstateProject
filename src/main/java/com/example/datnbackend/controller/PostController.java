@@ -2,6 +2,7 @@ package com.example.datnbackend.controller;
 
 import com.example.datnbackend.dto.MainResponse;
 import com.example.datnbackend.dto.post.PostCreateRequest;
+import com.example.datnbackend.dto.post.PostReportCreateRequest;
 import com.example.datnbackend.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -170,10 +171,80 @@ public class PostController {
     }
 
     @GetMapping(value = "/save/list")
-    ResponseEntity<Object> getDescriptionPostListSave(@RequestParam Integer page,
-                                                      @RequestParam Integer size){
+    ResponseEntity<Object> getPostSaveList(@RequestParam Integer page,
+                                           @RequestParam Integer size){
         try{
             return ResponseEntity.ok(postService.getDescriptionPostListSave(page, size));
+        }catch(Exception e){
+            return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
+        }
+    }
+
+    @PostMapping(value = "/save")
+    ResponseEntity<Object> deletePostSave(@RequestBody List<Long> ids){
+        try{
+            postService.deletePostSave(ids);
+            return new ResponseEntity<>(new MainResponse(true, "Lưu tin thành công"), HttpStatus.OK);
+        }catch (Exception e){
+            return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
+        }
+    }
+
+    @PostMapping(value = "/public/report/{id}")
+    ResponseEntity<Object> createPostReport(@PathVariable Long id,
+                                            @RequestBody PostReportCreateRequest requestBody){
+        try{
+            return ResponseEntity.ok(postService.createPostReport(id, requestBody));
+        }catch(Exception e){
+            return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
+        }
+    }
+
+    @GetMapping(value = "/admin/report")
+    @Secured("ROLE_ADMIN")
+    ResponseEntity<Object> getPostReportList(@RequestParam(value = "page") Integer page,
+                                             @RequestParam(value = "size") Integer size,
+                                             @RequestParam(value = "order", required = false) String order,
+                                             @RequestParam(value = "postId", required = false) Long postId,
+                                             @RequestParam(value = "typeId", required = false) Long typeId,
+                                             @RequestParam(value = "userId", required = false) Long userId,
+                                             @RequestParam(value = "viewed", required = false) Boolean viewed,
+                                             @RequestParam(value = "handled", required = false) Boolean handled){
+        try{
+            return ResponseEntity.ok(postService.getPostReportList(page, size, order, postId, typeId, userId, viewed, handled));
+        }catch(Exception e){
+            return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
+        }
+    }
+
+    @GetMapping(value = "/admin/report/{id}")
+    @Secured("ROLE_ADMIN")
+    ResponseEntity<Object> getPostReportDetail(@PathVariable Long id){
+        try{
+            return ResponseEntity.ok(postService.getPostReportDetail(id));
+        }catch(Exception e){
+            return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
+        }
+    }
+
+    @PutMapping(value = "/admin/report/{id}")
+    @Secured("ROLE_ADMIN")
+    ResponseEntity<Object> changeHandledState(@PathVariable Long id,
+                                              @RequestParam("handled") Boolean handled){
+        try{
+            postService.changeHandledState(id, handled);
+            return new ResponseEntity<>(new MainResponse(true, "Xoá thành công"), HttpStatus.OK);
+        }catch(Exception e){
+            return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
+        }
+    }
+
+    @DeleteMapping(value = "/admin/report")
+    @Secured("ROLE_ADMIN")
+    ResponseEntity<Object> deletePostReport(List<Long> ids){
+        try{
+            postService.deletePostReport(ids);
+            return new ResponseEntity<>(new MainResponse(true, "Xoá thành công"), HttpStatus.OK);
         }catch(Exception e){
             return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
         }

@@ -10,12 +10,14 @@ import com.example.datnbackend.repository.ContactRequestRepository;
 import com.example.datnbackend.repository.UserRepository;
 import com.example.datnbackend.security.UserPrincipal;
 import com.example.datnbackend.service.ContactService;
+import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
@@ -91,7 +93,7 @@ public class ContactServiceImpl implements ContactService {
 
     @Override
     public ContactDetailResponse getContactDetail(Long id) {
-        ContactRequestEntity contactRequestEntity = contactRequestRepository.findOneByIdWithDeletedFalse(id);
+        ContactRequestEntity contactRequestEntity = contactRequestRepository.findOneByIdAndDeletedFalse(id);
         if(contactRequestEntity == null){
             throw new AppException("Không tìm thấy yêu cầu liên hệ");
         }
@@ -110,7 +112,7 @@ public class ContactServiceImpl implements ContactService {
 
     @Override
     public void changeStateHandled(Long id, Boolean handled) {
-        ContactRequestEntity contactRequestEntity = contactRequestRepository.findOneByIdWithDeletedFalse(id);
+        ContactRequestEntity contactRequestEntity = contactRequestRepository.findOneByIdAndDeletedFalse(id);
         if(contactRequestEntity == null){
             throw new AppException("Không tìm thấy yêu cầu liên hệ");
         }
@@ -121,6 +123,27 @@ public class ContactServiceImpl implements ContactService {
 
         contactRequestEntity.setHandled(handled);
         contactRequestRepository.save(contactRequestEntity);
+    }
+
+    @Override
+    @Transactional
+    public void deleteContactRequest(List<Long> ids) {
+        if(ids == null || ids.isEmpty()){
+            throw new AppException("Xoá không thành công");
+        }
+        UserEntity currentUser = getCurrentUserEntity();
+
+        List<ContactRequestEntity> contactRequestEntityList
+                = contactRequestRepository.findAllByIdInAndUserBusinessIdAndDeletedFalse(ids, currentUser.getId());
+
+        if(contactRequestEntityList.size() != ids.size()){
+            throw new AppException("Xoá không thành công");
+        }
+
+        for(ContactRequestEntity i : contactRequestEntityList){
+            i.setDeleted(true);
+            contactRequestRepository.save(i);
+        }
     }
 
 

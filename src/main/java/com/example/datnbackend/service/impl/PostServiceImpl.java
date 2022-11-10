@@ -3,6 +3,7 @@ package com.example.datnbackend.service.impl;
 import com.example.datnbackend.dto.exception.AppException;
 import com.example.datnbackend.dto.post.*;
 import com.example.datnbackend.dto.user.UserDescriptionPostDetailResponse;
+import com.example.datnbackend.dto.user.UserDescriptionReviewResponse;
 import com.example.datnbackend.entity.*;
 import com.example.datnbackend.repository.*;
 import com.example.datnbackend.security.UserPrincipal;
@@ -33,11 +34,17 @@ public class PostServiceImpl implements PostService {
     @Autowired
     TypeEstateRepository typeEstateRepository;
     @Autowired
+    TypeReportRepository typeReportRepository;
+    @Autowired
     WardsRepository wardsRepository;
     @Autowired
     ReviewRepository reviewRepository;
     @Autowired
     PostImageRepository postImageRepository;
+    @Autowired
+    PostReportRepository postReportRepository;
+    @Autowired
+    PostSaveRepository postSaveRepository;
 
     @Override
     public PostDetailForBusinessResponse createPost(PostCreateRequest requestBody) {
@@ -377,10 +384,11 @@ public class PostServiceImpl implements PostService {
             throw new AppException("Not found post with id: " + id);
         }
 
-        List<PostEntity> postEntityList = currentUser.getPostSave();
-        postEntityList.add(postEntity);
-        currentUser.setPostSave(postEntityList);
-        userRepository.save(currentUser);
+        PostSaveEntity postSaveEntity = new PostSaveEntity();
+        postSaveEntity.setUser(currentUser);
+        postSaveEntity.setPost(postEntity);
+
+        postSaveRepository.save(postSaveEntity);
     }
 
     @Override
@@ -394,6 +402,143 @@ public class PostServiceImpl implements PostService {
         }
         return postEntityList.stream()
                 .map(o -> convertPostEntityToPostDescription(o)).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void deletePostSave(List<Long> ids) {
+        if(ids == null || ids.isEmpty()){
+            throw new AppException("Xoá không thành công");
+        }
+        UserEntity userEntity = getCurrentUserEntity();
+        List<PostSaveEntity> postSaveEntityList = postSaveRepository.findAllByUserIdAndPostIdIn(userEntity.getId(), ids);
+
+        if(postSaveEntityList.size() != ids.size()){
+            throw new AppException("Có id không tìm thấy");
+        }
+
+        postSaveRepository.deleteByUserIdAndPostIdIn(userEntity.getId(), ids);
+    }
+
+
+    @Override
+    public PostReportDetailResponse createPostReport(Long id, PostReportCreateRequest requestBody) {
+        if(requestBody.getTypeReportId() == null){
+            throw new AppException("Phải chọn loại báo cáo bài đăng");
+        }
+        if(requestBody.getEmailReport() == null && requestBody.getPhoneReport() == null){
+            throw new AppException("Cần điền thông tin email hoặc số điện thoại");
+        }
+
+        PostEntity postEntity = postRepository.findOneByIdAndDeletedFalseAndHideFalseAndLockedFalse(id);
+        if(postEntity == null){
+            throw new AppException("Không tìm thấy bài đăng với id: " + id);
+        }
+
+        TypeReportEntity typeReportEntity = typeReportRepository.findOneById(requestBody.getTypeReportId());
+        if(typeReportEntity == null){
+            throw new AppException("Không tìm thấy báo cáo bài đăng với id: " + requestBody.getTypeReportId());
+        }
+
+        PostReportEntity postReportEntity = new PostReportEntity();
+        postReportEntity.setPost(postEntity);
+        postReportEntity.setTypeReport(typeReportEntity);
+        postReportEntity.setEmailReport(requestBody.getEmailReport());
+        postReportEntity.setPhoneReport(requestBody.getPhoneReport());
+        postReportEntity.setDescription(requestBody.getDescription());
+        postReportEntity.setHandled(false);
+        postReportEntity.setDeleted(false);
+        postReportEntity.setHandledBy(null);
+
+        postReportEntity = postReportRepository.save(postReportEntity);
+        return new PostReportDetailResponse(postReportEntity.getId(), convertPostEntityToPostDescriptionForAdminBusiness(postReportEntity.getPost()),
+                postReportEntity.getTypeReport().getName(), postReportEntity.getEmailReport(), postReportEntity.getPhoneReport(),
+                postReportEntity.getDescription(), postReportEntity.getHandled(), null);
+    }
+
+    @Override
+    public List<PostReportDescriptionResponse> getPostReportList(Integer page, Integer size, String order, Long postId, Long typeId, Long userId, Boolean viewed, Boolean handled) {
+        if(order != null && order.equalsIgnoreCase("DATEDESC")){
+            order = order.toUpperCase();
+        }else{
+            order = null;
+        }
+
+        Integer viewedInt, handledInt;
+
+        if(viewed == null){
+            viewedInt = null;
+        }else {
+            viewedInt = viewed ? 1 : 0;
+        }
+
+        if(handled == null){
+            handledInt = null;
+        }else {
+            handledInt = handled ? 1 : 0;
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+        List<PostReportEntity> postReportEntityList
+                = postReportRepository.findAllWithFilter(order, postId, typeId, userId, viewedInt, handledInt, pageable);
+
+        if(postReportEntityList.isEmpty()){
+            return Collections.emptyList();
+        }
+
+        return postReportEntityList.stream()
+                .map(o -> new PostReportDescriptionResponse(o.getId(), o.getTypeReport().getName(), o.getEmailReport(),
+                        o.getPhoneReport(), o.getHandled(), convertEntityToDescriptionReview(o.getHandledBy())
+                        )).collect(Collectors.toList());
+    }
+
+    @Override
+    public PostReportDetailResponse getPostReportDetail(Long id) {
+        PostReportEntity postReportEntity = postReportRepository.findOneByIdAndDeletedFalse(id);
+        if(postReportEntity == null){
+            throw new AppException("Không tìm thấy báo cáo với id: " + id);
+        }
+        return new PostReportDetailResponse(postReportEntity.getId(), convertPostEntityToPostDescriptionForAdminBusiness(postReportEntity.getPost()),
+                postReportEntity.getTypeReport().getName(), postReportEntity.getEmailReport(), postReportEntity.getPhoneReport(), postReportEntity.getDescription(),
+                postReportEntity.getHandled(), convertEntityToDescriptionReview(postReportEntity.getHandledBy()));
+    }
+
+    @Override
+    public void changeHandledState(Long id, Boolean handled) {
+        PostReportEntity postReportEntity = postReportRepository.findOneByIdAndDeletedFalse(id);
+        if(postReportEntity == null){
+            throw new AppException("Không tìm thấy báo cáo với id: " + id);
+        }
+
+        if(postReportEntity.getHandled()){
+            throw new AppException("Báo cáo đã được xử lý");
+        }
+
+        if(!handled){
+            throw new AppException("Thay đổi trạng thái không thành công");
+        }
+
+        postReportEntity.setHandled(true);
+        postReportEntity.setHandledBy(getCurrentUserEntity());
+        postReportRepository.save(postReportEntity);
+    }
+
+
+    @Override
+    @Transactional
+    public void deletePostReport(List<Long> ids) {
+        if(ids == null || ids.isEmpty()){
+            throw new AppException("Xoá không thành công");
+        }
+        List<PostReportEntity> postReportEntityList = postReportRepository.findAllByIdInAndDeletedFalse(ids);
+        if(postReportEntityList.size() != ids.size()){
+            throw new AppException("Xoá không thành công");
+        }
+
+        for(PostReportEntity i : postReportEntityList){
+            i.setDeleted(true);
+            postReportRepository.save(i);
+        }
     }
 
 
@@ -476,5 +621,13 @@ public class PostServiceImpl implements PostService {
         }
         return postImageEntityList.stream()
                     .map(o -> new PostImageResponse(o.getId(), o.getUrl(), o.getMainImage())).collect(Collectors.toList());
+    }
+
+    private UserDescriptionReviewResponse convertEntityToDescriptionReview(UserEntity userEntity){
+        if(userEntity == null){
+            return null;
+        }
+        return new UserDescriptionReviewResponse(userEntity.getId(), userEntity.getUsername(), userEntity.getFirstName(),
+                userEntity.getLastName(), userEntity.getImageUrl());
     }
 }
