@@ -13,13 +13,12 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class UserDetailRequest {
     private Long id;
-    private String username;
+    private String email;
     private String firstName;
     private String lastName;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate birthDay;
     private String phone;
-    private String email;
     private Long wardsId;
     private String imageUrl;
     private Boolean displayReview;

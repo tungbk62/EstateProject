@@ -15,12 +15,17 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Service
 public class ReviewServiceImpl implements ReviewService {
     @Autowired
     ReviewRepository reviewRepository;
@@ -60,6 +65,10 @@ public class ReviewServiceImpl implements ReviewService {
             throw new AppException("Không có quyền chỉnh sửa đánh giá");
         }
 
+        if(requestBody.getRatingPoint() == null && requestBody.getDescription() == null){
+            throw new AppException("Cập nhật không thành công");
+        }
+
         if(requestBody.getRatingPoint() != null){
             if(requestBody.getRatingPoint() < 1 || requestBody.getRatingPoint() > 5){
                 throw new AppException("Phải trong khoảng từ 1 đến 5");
@@ -71,6 +80,7 @@ public class ReviewServiceImpl implements ReviewService {
             reviewEntity.setDescription(requestBody.getDescription());
         }
 
+        reviewEntity.setModifiedDate(getCurrentDateUTC());
         reviewEntity = reviewRepository.save(reviewEntity);
         return convertEntityToResponse(reviewEntity);
     }
@@ -121,6 +131,9 @@ public class ReviewServiceImpl implements ReviewService {
 
     }
 
+    private LocalDateTime getCurrentDateUTC(){
+        return LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC);
+    }
 
     private UserEntity getCurrentUserEntity(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -135,7 +148,23 @@ public class ReviewServiceImpl implements ReviewService {
     private ReviewResponse convertEntityToResponse(ReviewEntity reviewEntity){
         UserEntity createdBy = reviewEntity.getCreatedBy();
         return new ReviewResponse(reviewEntity.getId(), reviewEntity.getDescription(), reviewEntity.getRatingPoint(),
-                new UserDescriptionReviewResponse(createdBy.getId(), createdBy.getUsername(), createdBy.getFirstName(),
-                        createdBy.getLastName(), createdBy.getImageUrl()), reviewEntity.getCreatedDate());
+                new UserDescriptionReviewResponse(createdBy.getId(), createdBy.getEmail(), createdBy.getFirstName(),
+                        createdBy.getLastName(), createdBy.getImageUrl(), returnTypeOfUser(createdBy)), reviewEntity.getCreatedDate());
+    }
+
+    private String returnTypeOfUser(UserEntity userEntity){
+        if(userEntity == null){
+            return null;
+        }
+        String role = userEntity.getRoles().stream().findFirst().get().getName().toString();
+        if(role.equalsIgnoreCase("ROLE_BUSINESS")){
+            return "BUSINESS";
+        }else if(role.equalsIgnoreCase("ROLE_CUSTOMER")){
+            return  "CUSTOMER";
+        }else if(role.equalsIgnoreCase("ROLE_ADMIN")){
+            return "ADMIN";
+        }else {
+            return null;
+        }
     }
 }

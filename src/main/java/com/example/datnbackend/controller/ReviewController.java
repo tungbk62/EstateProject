@@ -19,8 +19,9 @@ public class ReviewController {
     ReviewService reviewService;
 
     @PostMapping(value = "/customer/{id}")
+    @Secured("ROLE_CUSTOMER")
     ResponseEntity<Object> createReview(@RequestBody ReviewCreateRequest requestBody,
-                                        @RequestParam Long id){
+                                        @PathVariable Long id){
         try{
             return ResponseEntity.ok(reviewService.createReview(id, requestBody));
         }catch(Exception e){
@@ -29,8 +30,9 @@ public class ReviewController {
     }
 
     @PutMapping(value = "/customer/{id}")
+    @Secured("ROLE_CUSTOMER")
     ResponseEntity<Object> updateReview(@RequestBody ReviewCreateRequest requestBody,
-                                        @RequestParam Long id){
+                                        @PathVariable Long id){
         try{
             return ResponseEntity.ok(reviewService.updateReview(id, requestBody));
         }catch(Exception e){
@@ -41,8 +43,8 @@ public class ReviewController {
     @GetMapping(value = "/public/{id}")
     ResponseEntity<Object> getReviewList(@RequestParam Integer page,
                                          @RequestParam Integer size,
-                                         @RequestParam String order,
-                                         @RequestParam Long id){
+                                         @RequestParam(required = false) String order,
+                                         @PathVariable Long id){
         try{
             return ResponseEntity.ok(reviewService.getReviewList(page, size, order, id));
         }catch(Exception e){

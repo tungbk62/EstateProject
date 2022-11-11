@@ -15,7 +15,7 @@ import java.time.LocalDate;
 public class UserSignupRequest {
     @NotNull
     @NotEmpty
-    private String username;
+    private String email;
 
     @NotNull
     @NotEmpty
@@ -35,10 +35,8 @@ public class UserSignupRequest {
 
     private String phone;
 
-    private String email;
-
     private Long wardsId;
 
     @NotNull
-    private String role;
+    private String type;
 }

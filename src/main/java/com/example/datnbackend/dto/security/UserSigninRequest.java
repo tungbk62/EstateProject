@@ -13,7 +13,7 @@ import javax.validation.constraints.NotNull;
 public class UserSigninRequest {
     @NotNull
     @NotEmpty
-    private String username;
+    private String email;
 
     @NotNull
     @NotEmpty

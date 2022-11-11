@@ -10,7 +10,6 @@ import com.example.datnbackend.repository.ContactRequestRepository;
 import com.example.datnbackend.repository.UserRepository;
 import com.example.datnbackend.security.UserPrincipal;
 import com.example.datnbackend.service.ContactService;
-import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,6 +39,14 @@ public class ContactServiceImpl implements ContactService {
 
         if(requestBody.getEmailContact() == null && requestBody.getPhoneContact() == null){
             throw new AppException("Cần điền thông tin email hoặc số điện thoại");
+        }
+
+        if(requestBody.getEmailContact() != null && !isValidEmail(requestBody.getEmailContact())){
+            throw new AppException("Địa chỉ email không đúng");
+        }
+
+        if(requestBody.getPhoneContact() != null && requestBody.getPhoneContact().isEmpty()){
+            throw new AppException("Số điện thoại không đúng");
         }
 
         ContactRequestEntity contactRequestEntity = new ContactRequestEntity();
@@ -102,8 +110,10 @@ public class ContactServiceImpl implements ContactService {
             throw new AppException("Không có quyền truy cập");
         }
 
-        contactRequestEntity.setViewed(true);
-        contactRequestEntity = contactRequestRepository.save(contactRequestEntity);
+        if(!contactRequestEntity.getViewed()){
+            contactRequestEntity.setViewed(true);
+            contactRequestEntity = contactRequestRepository.save(contactRequestEntity);
+        }
 
         return new ContactDetailResponse(contactRequestEntity.getId(), contactRequestEntity.getEmailContact(), contactRequestEntity.getPhoneContact(),
                 contactRequestEntity.getMessage(), contactRequestEntity.getViewed(), contactRequestEntity.getHandled(),
@@ -119,6 +129,10 @@ public class ContactServiceImpl implements ContactService {
         UserEntity currentUserEntity = getCurrentUserEntity();
         if(currentUserEntity.getId() != contactRequestEntity.getUserBusiness().getId()){
             throw new AppException("Không có quyền truy cập");
+        }
+
+        if(handled && !contactRequestEntity.getViewed()) {
+            throw new AppException("Chưa duyệt yêu cầu liên hệ");
         }
 
         contactRequestEntity.setHandled(handled);
@@ -146,7 +160,6 @@ public class ContactServiceImpl implements ContactService {
         }
     }
 
-
     private UserEntity getCurrentUserEntity(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
@@ -155,6 +168,20 @@ public class ContactServiceImpl implements ContactService {
             throw new AppException("Not found current user");
         }
         return userEntity;
+    }
+
+    private Boolean isValidEmail(String email)
+    {
+        String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\."+
+                "[a-zA-Z0-9_+&*-]+)*@" +
+                "(?:[a-zA-Z0-9-]+\\.)+[a-z" +
+                "A-Z]{2,7}$";
+
+        Pattern pattern = Pattern.compile(emailRegex);
+        if (email == null || email.isEmpty()){
+            return false;
+        }
+        return pattern.matcher(email).matches();
     }
 
 }

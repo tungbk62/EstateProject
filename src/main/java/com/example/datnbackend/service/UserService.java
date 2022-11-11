@@ -13,7 +13,7 @@ public interface UserService {
     ResponseEntity<?> signin(UserSigninRequest signinDTO);
     SecurityResponse signup(UserSignupRequest signupDTO);
     SecurityResponse signupAdmin(UserSignupAdminRequest signupDTO);
-    List<UserDescriptionAdminResponse> getUserDescriptionForAdmin(Integer page, Integer size, String query);
+    List<UserDescriptionAdminResponse> getUserDescriptionForAdmin(Integer page, Integer size, String type, String query);
     UserDetailResponse getUserDetail(Long id);
     UserDetailAdminResponseRequest getUserDetailForAdmin(Long id);
     UserDetailResponse updateUserDetail(Long id, UserDetailRequest requestBody);

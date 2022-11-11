@@ -32,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -53,28 +54,30 @@ public class UserServiceImpl implements UserService {
     public ResponseEntity<?> signin(UserSigninRequest signinDTO) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        signinDTO.getUsername(),
+                        signinDTO.getEmail(),
                         signinDTO.getPassword()
                 )
         );
 
-        if(userRepository.findByUsernameWithLockedIsFalse(signinDTO.getUsername()) == null){
+        UserEntity userEntity = userRepository.findByEmailWithLockedIsFalse(signinDTO.getEmail());
+
+        if(userEntity == null){
             return new ResponseEntity<>(new SecurityResponse(false, "Your account is locked"), HttpStatus.FORBIDDEN);
         }
 
 //        SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String jwt = jwtTokenProvider.generateToken(authentication);
-        return ResponseEntity.ok(new JwtAuthenticationResponse(jwt));
+        return ResponseEntity.ok(new JwtAuthenticationResponse(jwt, returnTypeOfUser(userEntity)));
     }
 
     @Override
     public SecurityResponse signup(UserSignupRequest signupDTO) {
         RoleEntity userRole;
-        checkDuplicateField(signupDTO.getUsername(), signupDTO.getEmail(), signupDTO.getPhone());
+        checkDuplicateField(signupDTO.getEmail(), signupDTO.getPhone());
 
         UserEntity userEntity = new UserEntity();
-        userEntity.setUsername(signupDTO.getUsername());
+        userEntity.setEmail(signupDTO.getEmail());
         userEntity.setPassword(passwordEncoder.encode(signupDTO.getPassword()));
         if(signupDTO.getFirstName() == null || signupDTO.getFirstName().isEmpty()){
             return new SecurityResponse(false, "Tên không được null hoặc trống");
@@ -85,18 +88,17 @@ public class UserServiceImpl implements UserService {
         }
         userEntity.setLastName(signupDTO.getLastName());
         userEntity.setBirthDay(signupDTO.getBirthDay());
-        userEntity.setEmail(signupDTO.getEmail());
         userEntity.setPhone(signupDTO.getPhone());
         userEntity.setDeleted(false);
         userEntity.setLocked(false);
 
-        if(signupDTO.getRole().equalsIgnoreCase("BUSINESS")){
+        if(signupDTO.getType().equalsIgnoreCase("BUSINESS")){
             userRole = roleRepository.findByName(RoleEntity.Name.ROLE_BUSINESS);
             if(userRole == null){
                 return new SecurityResponse(false, "User role not exists");
             }
             userEntity.setDisplayReview(true);
-        }else if(signupDTO.getRole().equalsIgnoreCase("CUSTOMER")){
+        }else if(signupDTO.getType().equalsIgnoreCase("CUSTOMER")){
             userRole = roleRepository.findByName(RoleEntity.Name.ROLE_CUSTOMER);
             if(userRole == null){
                 return new SecurityResponse(false, "User role not exists");
@@ -124,12 +126,11 @@ public class UserServiceImpl implements UserService {
         RoleEntity userRole;
 
         UserEntity userEntity = new UserEntity();
-        userEntity.setUsername(signupDTO.getUsername());
+        userEntity.setEmail(signupDTO.getEmail());
         userEntity.setPassword(passwordEncoder.encode(signupDTO.getPassword()));
         userEntity.setFirstName(signupDTO.getFirstName());
         userEntity.setLastName(signupDTO.getLastName());
         userEntity.setBirthDay(signupDTO.getBirthDay());
-        userEntity.setEmail(signupDTO.getEmail());
         userEntity.setPhone(signupDTO.getPhone());
         userEntity.setDeleted(false);
         userEntity.setLocked(false);
@@ -158,23 +159,27 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserDescriptionAdminResponse> getUserDescriptionForAdmin(Integer page, Integer size, String query) {
+    public List<UserDescriptionAdminResponse> getUserDescriptionForAdmin(Integer page, Integer size, String type, String query) {
+        if(type != null && type.equalsIgnoreCase("BUSINESS")){
+            type = "ROLE_BUSINESS";
+        }else if(type != null && type.equalsIgnoreCase("CUSTOMER")){
+            type = "ROLE_CUSTOMER";
+        }else {
+            type = null;
+        }
+
         List<UserDescriptionAdminResponse> userDescriptionAdminResponseList;
         List<UserEntity> userEntityList;
-        if(page != null && size != null){
-            Pageable pageable = PageRequest.of(page, size);
-            userEntityList = userRepository.findAllUserWithPagingAndQueryAndDeletedIsFalse(query, pageable);
-        }else {
-            userEntityList = userRepository.findAllUserWithDeletedIsFalseWithNormalRole();
-        }
+        Pageable pageable = PageRequest.of(page, size);
+        userEntityList = userRepository.findAllUserWithPagingAndQueryAndDeletedIsFalse(type, query, pageable);
 
         if(userEntityList.isEmpty()){
             return Collections.emptyList();
         }
 
         userDescriptionAdminResponseList = userEntityList.stream().map(o -> new UserDescriptionAdminResponse(
-                o.getId(), o.getUsername(), o.getFirstName(), o.getLastName(), o.getDisplayReview(), o.getLocked()
-        )).collect(Collectors.toList());
+                o.getId(), o.getEmail(), o.getFirstName(), o.getLastName(), o.getDisplayReview(), o.getLocked(),
+                returnTypeOfUser(o))).collect(Collectors.toList());
 
         return userDescriptionAdminResponseList;
     }
@@ -192,18 +197,18 @@ public class UserServiceImpl implements UserService {
         }
         return new UserDetailResponse(
                 userEntity.getId(),
-                userEntity.getUsername(),
+                userEntity.getEmail(),
                 userEntity.getFirstName(),
                 userEntity.getLastName(),
                 userEntity.getBirthDay(),
                 userEntity.getPhone(),
-                userEntity.getEmail(),
                 userEntity.getWards() == null ? null : userEntity.getWards().getDistrict().getProvince().getName(),
                 userEntity.getWards() == null ? null : userEntity.getWards().getDistrict().getName(),
                 userEntity.getWards() == null ? null : userEntity.getWards().getName(),
                 null,
                 userEntity.getDisplayReview(),
-                userEntity.getCreatedDate());
+                userEntity.getCreatedDate(),
+                returnTypeOfUser(userEntity));
     }
 
     @Override
@@ -214,12 +219,11 @@ public class UserServiceImpl implements UserService {
         }
         return new UserDetailAdminResponseRequest(
                 userEntity.getId(),
-                userEntity.getUsername(),
+                userEntity.getEmail(),
                 userEntity.getFirstName(),
                 userEntity.getLastName(),
                 userEntity.getBirthDay(),
                 userEntity.getPhone(),
-                userEntity.getEmail(),
                 userEntity.getWards() == null ? null : userEntity.getWards().getDistrict().getProvince().getName(),
                 userEntity.getWards() == null ? null : userEntity.getWards().getDistrict().getName(),
                 userEntity.getWards() == null ? null : userEntity.getWards().getName(),
@@ -227,7 +231,8 @@ public class UserServiceImpl implements UserService {
                 userEntity.getDisplayReview(),
                 userEntity.getLocked(),
                 userEntity.getDeleted(),
-                userEntity.getCreatedDate());
+                userEntity.getCreatedDate(),
+                returnTypeOfUser(userEntity));
     }
 
 
@@ -243,12 +248,6 @@ public class UserServiceImpl implements UserService {
             throw new AppException("Not found user with id: " + id);
         }
 
-        if(requestBody.getUsername() != null){
-            if(userRepository.existsByUsername(requestBody.getUsername())){
-                throw new AppException("Username already exits");
-            }
-            userEntity.setUsername(requestBody.getUsername());
-        }
         if(requestBody.getEmail() != null){
             if(userRepository.findByEmail(requestBody.getEmail()) != null){
                 throw new AppException("Email already exits");
@@ -282,18 +281,18 @@ public class UserServiceImpl implements UserService {
 
         return new UserDetailResponse(
                 userEntity.getId(),
-                userEntity.getUsername(),
+                userEntity.getEmail(),
                 userEntity.getFirstName(),
                 userEntity.getLastName(),
                 userEntity.getBirthDay(),
                 userEntity.getPhone(),
-                userEntity.getEmail(),
                 userEntity.getWards() == null ? null : userEntity.getWards().getDistrict().getProvince().getName(),
                 userEntity.getWards() == null ? null : userEntity.getWards().getDistrict().getName(),
                 userEntity.getWards() == null ? null : userEntity.getWards().getName(),
                 null,
                 userEntity.getDisplayReview(),
-                userEntity.getCreatedDate());
+                userEntity.getCreatedDate(),
+                returnTypeOfUser(userEntity));
     }
 
     @Override
@@ -371,10 +370,7 @@ public class UserServiceImpl implements UserService {
         return false;
     }
 
-    private void checkDuplicateField(String username, String email, String phone){
-        if(username != null && userRepository.existsByUsername(username)){
-            throw new AppException("Username already exits");
-        }
+    private void checkDuplicateField(String email, String phone){
 
         if(email != null && userRepository.findByEmail(email) != null){
             throw new AppException("Email already exits");
@@ -382,6 +378,22 @@ public class UserServiceImpl implements UserService {
 
         if(phone != null && userRepository.findByPhone(phone) != null){
             throw new AppException("Phone number already exits");
+        }
+    }
+
+    private String returnTypeOfUser(UserEntity userEntity){
+        if(userEntity == null){
+            return null;
+        }
+        String role = userEntity.getRoles().stream().findFirst().get().getName().toString();
+        if(role.equalsIgnoreCase("ROLE_BUSINESS")){
+            return "BUSINESS";
+        }else if(role.equalsIgnoreCase("ROLE_CUSTOMER")){
+            return  "CUSTOMER";
+        }else if(role.equalsIgnoreCase("ROLE_ADMIN")){
+            return "ADMIN";
+        }else {
+            return null;
         }
     }
 }

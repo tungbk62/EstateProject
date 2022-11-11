@@ -180,11 +180,11 @@ public class PostController {
         }
     }
 
-    @PostMapping(value = "/save")
+    @DeleteMapping(value = "/save")
     ResponseEntity<Object> deletePostSave(@RequestBody List<Long> ids){
         try{
             postService.deletePostSave(ids);
-            return new ResponseEntity<>(new MainResponse(true, "Lưu tin thành công"), HttpStatus.OK);
+            return new ResponseEntity<>(new MainResponse(true, "Xoá thành công"), HttpStatus.OK);
         }catch (Exception e){
             return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
         }
@@ -208,10 +208,9 @@ public class PostController {
                                              @RequestParam(value = "postId", required = false) Long postId,
                                              @RequestParam(value = "typeId", required = false) Long typeId,
                                              @RequestParam(value = "userId", required = false) Long userId,
-                                             @RequestParam(value = "viewed", required = false) Boolean viewed,
                                              @RequestParam(value = "handled", required = false) Boolean handled){
         try{
-            return ResponseEntity.ok(postService.getPostReportList(page, size, order, postId, typeId, userId, viewed, handled));
+            return ResponseEntity.ok(postService.getPostReportList(page, size, order, postId, typeId, userId, handled));
         }catch(Exception e){
             return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
         }
@@ -233,7 +232,7 @@ public class PostController {
                                               @RequestParam("handled") Boolean handled){
         try{
             postService.changeHandledState(id, handled);
-            return new ResponseEntity<>(new MainResponse(true, "Xoá thành công"), HttpStatus.OK);
+            return new ResponseEntity<>(new MainResponse(true, "Thay đổi trạng thái thành công"), HttpStatus.OK);
         }catch(Exception e){
             return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
         }
@@ -241,7 +240,7 @@ public class PostController {
 
     @DeleteMapping(value = "/admin/report")
     @Secured("ROLE_ADMIN")
-    ResponseEntity<Object> deletePostReport(List<Long> ids){
+    ResponseEntity<Object> deletePostReport(@RequestBody List<Long> ids){
         try{
             postService.deletePostReport(ids);
             return new ResponseEntity<>(new MainResponse(true, "Xoá thành công"), HttpStatus.OK);

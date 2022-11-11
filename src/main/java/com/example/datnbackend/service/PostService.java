@@ -23,7 +23,7 @@ public interface PostService {
     List<PostDescriptionResponse> getDescriptionPostListSave(Integer page, Integer size);
     void deletePostSave(List<Long> ids);
     PostReportDetailResponse createPostReport(Long id, PostReportCreateRequest requestBody);
-    List<PostReportDescriptionResponse> getPostReportList(Integer page, Integer size, String order, Long postId, Long typeId, Long userId, Boolean viewed, Boolean handled);
+    List<PostReportDescriptionResponse> getPostReportList(Integer page, Integer size, String order, Long postId, Long typeId, Long userId, Boolean handled);
     PostReportDetailResponse getPostReportDetail(Long id);
     void changeHandledState(Long id, Boolean handled);
     void deletePostReport(List<Long> ids);

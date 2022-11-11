@@ -1,5 +1,6 @@
 package com.example.datnbackend.dto.contact;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,5 +16,6 @@ public class ContactDescriptionResponse {
     private String phoneContact;
     private Boolean viewed;
     private Boolean handled;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdDate;
 }

@@ -17,17 +17,15 @@ public interface PostReportRepository extends JpaRepository<PostReportEntity, Lo
             "AND ((:postId IS NULL) OR (pr.post_id = :postId)) " +
             "AND ((:typeId IS NULL) OR (pr.type_report_id = :typeId)) " +
             "AND ((:userId IS NULL) OR (p.created_by = :userId)) " +
-            "AND ((:viewed IS NULL) OR (pr.viewed = :viewed)) " +
             "AND ((:handled IS NULL) OR (pr.handled = :handled)) " +
             "ORDER BY " +
             "CASE WHEN :order IS NULL THEN NULL END, " +
             "CASE WHEN :order = 'DATEDESC' THEN pr.created_date END DESC", nativeQuery = true)
     List<PostReportEntity> findAllWithFilter(@Param("order") String order, @Param("postId") Long postId, @Param("typeId") Long typeId,
-                                             @Param("userId") Long userId, @Param("viewed") Integer viewed, @Param("handled") Integer handled,
-                                             Pageable pageable);
+                                             @Param("userId") Long userId, @Param("handled") Integer handled, Pageable pageable);
 
     PostReportEntity findOneByIdAndDeletedFalse(Long id);
     @Query(value = "SELECT pr.* FROM post_report pr " +
-            "WHERE pr.deleted = 0 AND pr.id IN (?1)")
+            "WHERE pr.deleted = 0 AND pr.handled = 1 AND pr.id IN (?1)", nativeQuery = true)
     List<PostReportEntity> findAllByIdInAndDeletedFalse(List<Long> ids);
 }

@@ -1,6 +1,7 @@
 package com.example.datnbackend.dto.post;
 
 import com.example.datnbackend.entity.UserEntity;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,6 +31,8 @@ public class PostDescriptionAdminResponse {
     private Boolean verified;
     private Integer view;
     private UserEntity createdBy;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdDate;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime modifiedDate;
 }

@@ -19,11 +19,12 @@ public class UserController {
 
     @GetMapping("/admin")
     @Secured({"ROLE_SUPER_ADMIN", "ROLE_ADMIN"})
-    ResponseEntity<Object> getUserDescriptionForAdmin(@RequestParam(required = false) Integer page,
-                                                      @RequestParam(required = false) Integer size,
+    ResponseEntity<Object> getUserDescriptionForAdmin(@RequestParam Integer page,
+                                                      @RequestParam Integer size,
+                                                      @RequestParam(required = false) String type,
                                                       @RequestParam(required = false) String query){
         try{
-            return ResponseEntity.ok(userService.getUserDescriptionForAdmin(page, size, query));
+            return ResponseEntity.ok(userService.getUserDescriptionForAdmin(page, size, type, query));
         }catch(Exception e){
             return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
         }

@@ -9,9 +9,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UserDescriptionAdminResponse {
     private Long id;
-    private String username;
+    private String email;
     private String firstName;
     private String lastName;
     private Boolean displayReview;
     private Boolean locked;
+    private String type;
 }

@@ -3,9 +3,11 @@ package com.example.datnbackend.repository;
 import com.example.datnbackend.entity.PostEntity;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -80,4 +82,14 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
             "JOIN post_save ps ON p.id = ps.post_id " +
             "WHERE ps.user_id = ?1 AND p.deleted = 0 AND p.hide = 0 AND p.locked = 0", nativeQuery = true)
     List<PostEntity> findAllByUserIdWithDeletedFalseAndHideFalseAndLockedFalse(Long id, Pageable pageable);
+
+    @Query(value = "SELECT p.* FROM post p " +
+            "JOIN post_save ps ON p.id = ps.post_id " +
+            "WHERE ps.user_id = ?1 AND p.id IN (?2)", nativeQuery = true)
+    List<PostEntity> findAllByUserIdNoPaging(Long id, List<Long> ids);
+
+    @Modifying
+    @Transactional
+    @Query(value = "DELETE FROM post_save ps WHERE ps.user_id = ?1 AND ps.post_id IN (?2)", nativeQuery = true)
+    void deleteByUserIdAndPostIdIn(Long userId, List<Long> ids);
 }

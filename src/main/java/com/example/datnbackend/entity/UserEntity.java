@@ -23,8 +23,8 @@ public class UserEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "username", nullable = false, unique = true)
-    private String username;
+    @Column(name = "email", nullable = false, unique = true)
+    private String email;
 
     @Column(name = "password", nullable = false)
     private String password;
@@ -40,9 +40,6 @@ public class UserEntity {
 
     @Column(name = "phone", unique = true)
     private String phone;
-
-    @Column(name = "email", unique = true)
-    private String email;
 
     @ManyToOne
     @JoinColumn(name = "wards_id")
@@ -70,6 +67,14 @@ public class UserEntity {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<RoleEntity> roles;
+
+    @ManyToMany(cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "post_save",
+            joinColumns = @JoinColumn(name = "user_id", nullable = false),
+            inverseJoinColumns = @JoinColumn(name = "post_id", nullable = false)
+    )
+    private List<PostEntity> postSave;
 
     @PrePersist
     public void prePersist() {

@@ -23,6 +23,7 @@ import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,8 +44,6 @@ public class PostServiceImpl implements PostService {
     PostImageRepository postImageRepository;
     @Autowired
     PostReportRepository postReportRepository;
-    @Autowired
-    PostSaveRepository postSaveRepository;
 
     @Override
     public PostDetailForBusinessResponse createPost(PostCreateRequest requestBody) {
@@ -384,11 +383,10 @@ public class PostServiceImpl implements PostService {
             throw new AppException("Not found post with id: " + id);
         }
 
-        PostSaveEntity postSaveEntity = new PostSaveEntity();
-        postSaveEntity.setUser(currentUser);
-        postSaveEntity.setPost(postEntity);
-
-        postSaveRepository.save(postSaveEntity);
+        List<PostEntity> postEntityList = currentUser.getPostSave();
+        postEntityList.add(postEntity);
+        currentUser.setPostSave(postEntityList);
+        userRepository.save(currentUser);
     }
 
     @Override
@@ -411,13 +409,13 @@ public class PostServiceImpl implements PostService {
             throw new AppException("Xoá không thành công");
         }
         UserEntity userEntity = getCurrentUserEntity();
-        List<PostSaveEntity> postSaveEntityList = postSaveRepository.findAllByUserIdAndPostIdIn(userEntity.getId(), ids);
+        List<PostEntity> postEntityList = postRepository.findAllByUserIdNoPaging(userEntity.getId(), ids);
 
-        if(postSaveEntityList.size() != ids.size()){
+        if(postEntityList.size() != ids.size()){
             throw new AppException("Có id không tìm thấy");
         }
 
-        postSaveRepository.deleteByUserIdAndPostIdIn(userEntity.getId(), ids);
+        postRepository.deleteByUserIdAndPostIdIn(userEntity.getId(), ids);
     }
 
 
@@ -428,6 +426,14 @@ public class PostServiceImpl implements PostService {
         }
         if(requestBody.getEmailReport() == null && requestBody.getPhoneReport() == null){
             throw new AppException("Cần điền thông tin email hoặc số điện thoại");
+        }
+
+        if(requestBody.getEmailReport() != null && !isValidEmail(requestBody.getEmailReport())){
+            throw new AppException("Địa chỉ email không đúng");
+        }
+
+        if(requestBody.getPhoneReport() != null && requestBody.getPhoneReport().isEmpty()){
+            throw new AppException("Số điện thoại không đúng");
         }
 
         PostEntity postEntity = postRepository.findOneByIdAndDeletedFalseAndHideFalseAndLockedFalse(id);
@@ -453,24 +459,18 @@ public class PostServiceImpl implements PostService {
         postReportEntity = postReportRepository.save(postReportEntity);
         return new PostReportDetailResponse(postReportEntity.getId(), convertPostEntityToPostDescriptionForAdminBusiness(postReportEntity.getPost()),
                 postReportEntity.getTypeReport().getName(), postReportEntity.getEmailReport(), postReportEntity.getPhoneReport(),
-                postReportEntity.getDescription(), postReportEntity.getHandled(), null);
+                postReportEntity.getDescription(), postReportEntity.getHandled(), null, postReportEntity.getCreatedDate());
     }
 
     @Override
-    public List<PostReportDescriptionResponse> getPostReportList(Integer page, Integer size, String order, Long postId, Long typeId, Long userId, Boolean viewed, Boolean handled) {
+    public List<PostReportDescriptionResponse> getPostReportList(Integer page, Integer size, String order, Long postId, Long typeId, Long userId, Boolean handled) {
         if(order != null && order.equalsIgnoreCase("DATEDESC")){
             order = order.toUpperCase();
         }else{
             order = null;
         }
 
-        Integer viewedInt, handledInt;
-
-        if(viewed == null){
-            viewedInt = null;
-        }else {
-            viewedInt = viewed ? 1 : 0;
-        }
+        Integer handledInt;
 
         if(handled == null){
             handledInt = null;
@@ -480,7 +480,7 @@ public class PostServiceImpl implements PostService {
 
         Pageable pageable = PageRequest.of(page, size);
         List<PostReportEntity> postReportEntityList
-                = postReportRepository.findAllWithFilter(order, postId, typeId, userId, viewedInt, handledInt, pageable);
+                = postReportRepository.findAllWithFilter(order, postId, typeId, userId, handledInt, pageable);
 
         if(postReportEntityList.isEmpty()){
             return Collections.emptyList();
@@ -488,7 +488,7 @@ public class PostServiceImpl implements PostService {
 
         return postReportEntityList.stream()
                 .map(o -> new PostReportDescriptionResponse(o.getId(), o.getTypeReport().getName(), o.getEmailReport(),
-                        o.getPhoneReport(), o.getHandled(), convertEntityToDescriptionReview(o.getHandledBy())
+                        o.getPhoneReport(), o.getHandled(), convertEntityToDescriptionReview(o.getHandledBy()), o.getCreatedDate()
                         )).collect(Collectors.toList());
     }
 
@@ -500,7 +500,7 @@ public class PostServiceImpl implements PostService {
         }
         return new PostReportDetailResponse(postReportEntity.getId(), convertPostEntityToPostDescriptionForAdminBusiness(postReportEntity.getPost()),
                 postReportEntity.getTypeReport().getName(), postReportEntity.getEmailReport(), postReportEntity.getPhoneReport(), postReportEntity.getDescription(),
-                postReportEntity.getHandled(), convertEntityToDescriptionReview(postReportEntity.getHandledBy()));
+                postReportEntity.getHandled(), convertEntityToDescriptionReview(postReportEntity.getHandledBy()), postReportEntity.getCreatedDate());
     }
 
     @Override
@@ -580,12 +580,12 @@ public class PostServiceImpl implements PostService {
             userDescriptionPostDetailResponse.setRatingPoint((Double.valueOf(totalPoint))/reviewEntityList.size());
         }
         userDescriptionPostDetailResponse.setId(userEntity.getId());
-        userDescriptionPostDetailResponse.setUsername(userEntity.getUsername());
+        userDescriptionPostDetailResponse.setEmail(userEntity.getEmail());
         userDescriptionPostDetailResponse.setFirstName(userEntity.getFirstName());
         userDescriptionPostDetailResponse.setLastName(userEntity.getLastName());
-        userDescriptionPostDetailResponse.setEmail(userEntity.getEmail());
         userDescriptionPostDetailResponse.setPhone(userEntity.getPhone());
         userDescriptionPostDetailResponse.setImageUrl(userEntity.getImageUrl());
+        userDescriptionPostDetailResponse.setType(returnTypeOfUser(userEntity));
         return userDescriptionPostDetailResponse;
     }
 
@@ -627,7 +627,37 @@ public class PostServiceImpl implements PostService {
         if(userEntity == null){
             return null;
         }
-        return new UserDescriptionReviewResponse(userEntity.getId(), userEntity.getUsername(), userEntity.getFirstName(),
-                userEntity.getLastName(), userEntity.getImageUrl());
+        return new UserDescriptionReviewResponse(userEntity.getId(), userEntity.getEmail(), userEntity.getFirstName(),
+                userEntity.getLastName(), userEntity.getImageUrl(), returnTypeOfUser(userEntity));
+    }
+
+    private Boolean isValidEmail(String email)
+    {
+        String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\."+
+                "[a-zA-Z0-9_+&*-]+)*@" +
+                "(?:[a-zA-Z0-9-]+\\.)+[a-z" +
+                "A-Z]{2,7}$";
+
+        Pattern pattern = Pattern.compile(emailRegex);
+        if (email == null || email.isEmpty()){
+            return false;
+        }
+        return pattern.matcher(email).matches();
+    }
+
+    private String returnTypeOfUser(UserEntity userEntity){
+        if(userEntity == null){
+            return null;
+        }
+        String role = userEntity.getRoles().stream().findFirst().get().getName().toString();
+        if(role.equalsIgnoreCase("ROLE_BUSINESS")){
+            return "BUSINESS";
+        }else if(role.equalsIgnoreCase("ROLE_CUSTOMER")){
+            return  "CUSTOMER";
+        }else if(role.equalsIgnoreCase("ROLE_ADMIN")){
+            return "ADMIN";
+        }else {
+            return null;
+        }
     }
 }

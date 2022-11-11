@@ -15,7 +15,7 @@ import java.time.LocalDate;
 public class UserSignupAdminRequest {
     @NotNull
     @NotEmpty
-    private String username;
+    private String email;
 
     @NotNull
     @NotEmpty
@@ -34,8 +34,6 @@ public class UserSignupAdminRequest {
     private LocalDate birthDay;
 
     private String phone;
-
-    private String email;
 
     private Long wardsId;
 }

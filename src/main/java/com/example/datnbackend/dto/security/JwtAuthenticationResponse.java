@@ -1,10 +1,14 @@
 package com.example.datnbackend.dto.security;
 
+import java.util.Set;
+
 public class JwtAuthenticationResponse {
     private String accessToken;
     private String tokenType = "bearer";
-    public JwtAuthenticationResponse(String accessToken){
+    private String type;
+    public JwtAuthenticationResponse(String accessToken, String type){
         this.accessToken = accessToken;
+        this.type = type;
     }
 
     public String getAccessToken() {
@@ -21,5 +25,13 @@ public class JwtAuthenticationResponse {
 
     public void setTokenType(String tokenType) {
         this.tokenType = tokenType;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }
