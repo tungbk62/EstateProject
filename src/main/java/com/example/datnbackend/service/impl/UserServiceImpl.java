@@ -14,6 +14,7 @@ import com.example.datnbackend.repository.UserRepository;
 import com.example.datnbackend.repository.WardsRepository;
 import com.example.datnbackend.security.JwtTokenProvider;
 import com.example.datnbackend.security.UserPrincipal;
+import com.example.datnbackend.service.ImageService;
 import com.example.datnbackend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -28,6 +29,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -49,6 +51,10 @@ public class UserServiceImpl implements UserService {
     JwtTokenProvider jwtTokenProvider;
     @Autowired
     WardsRepository wardsRepository;
+    @Autowired
+    ImageService imageService;
+
+    private final String avatarDefaultUrl = "link default";
 
     @Override
     public ResponseEntity<?> signin(UserSigninRequest signinDTO) {
@@ -72,19 +78,23 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public SecurityResponse signup(UserSignupRequest signupDTO) {
+    public void signup(UserSignupRequest signupDTO, MultipartFile fileImage) {
         RoleEntity userRole;
         checkDuplicateField(signupDTO.getEmail(), signupDTO.getPhone());
 
         UserEntity userEntity = new UserEntity();
         userEntity.setEmail(signupDTO.getEmail());
+
+        if(signupDTO.getPassword() == null || signupDTO.getPassword().isEmpty()){
+            throw new AppException("Phải có mật khẩu");
+        }
         userEntity.setPassword(passwordEncoder.encode(signupDTO.getPassword()));
         if(signupDTO.getFirstName() == null || signupDTO.getFirstName().isEmpty()){
-            return new SecurityResponse(false, "Tên không được null hoặc trống");
+            throw new AppException("Tên không được null hoặc trống");
         }
         userEntity.setFirstName(signupDTO.getFirstName());
         if(signupDTO.getLastName() == null || signupDTO.getLastName().isEmpty()){
-            return new SecurityResponse(false, "Tên không được null hoặc trống");
+            throw new AppException("Tên không được null hoặc trống");
         }
         userEntity.setLastName(signupDTO.getLastName());
         userEntity.setBirthDay(signupDTO.getBirthDay());
@@ -95,30 +105,35 @@ public class UserServiceImpl implements UserService {
         if(signupDTO.getType().equalsIgnoreCase("BUSINESS")){
             userRole = roleRepository.findByName(RoleEntity.Name.ROLE_BUSINESS);
             if(userRole == null){
-                return new SecurityResponse(false, "User role not exists");
+                throw new AppException("Không tồn tại role");
             }
             userEntity.setDisplayReview(true);
         }else if(signupDTO.getType().equalsIgnoreCase("CUSTOMER")){
             userRole = roleRepository.findByName(RoleEntity.Name.ROLE_CUSTOMER);
             if(userRole == null){
-                return new SecurityResponse(false, "User role not exists");
+                throw new AppException("Không tồn tại role");
             }
             userEntity.setDisplayReview(false);
         }else {
-            return new SecurityResponse(false, "User role not exists");
+            throw new AppException("Không tồn tại role");
         }
 
         WardsEntity wardsEntity = wardsRepository.findOneById(signupDTO.getWardsId());
         if(wardsEntity == null){
-            return new SecurityResponse(false, "Not found address with id: " + signupDTO.getWardsId());
+            throw new AppException("Không tìm thấy địa chỉ với id: " + signupDTO.getWardsId());
         }
         userEntity.setWards(wardsEntity);
 
         userEntity.setRoles(Collections.singleton(userRole));
 
+        try {
+            userEntity.setImageUrl(imageService.saveAvatarImageGetUrl(fileImage));
+        }catch (Exception e){
+            userEntity.setImageUrl(null);
+        }
+
         userRepository.save(userEntity);
 
-        return new SecurityResponse(true, "Registered successfully");
     }
 
     @Override
@@ -179,7 +194,7 @@ public class UserServiceImpl implements UserService {
 
         userDescriptionAdminResponseList = userEntityList.stream().map(o -> new UserDescriptionAdminResponse(
                 o.getId(), o.getEmail(), o.getFirstName(), o.getLastName(), o.getDisplayReview(), o.getLocked(),
-                returnTypeOfUser(o))).collect(Collectors.toList());
+                returnTypeOfUser(o), o.getImageUrl() == null ? avatarDefaultUrl : o.getImageUrl())).collect(Collectors.toList());
 
         return userDescriptionAdminResponseList;
     }
@@ -205,7 +220,7 @@ public class UserServiceImpl implements UserService {
                 userEntity.getWards() == null ? null : userEntity.getWards().getDistrict().getProvince().getName(),
                 userEntity.getWards() == null ? null : userEntity.getWards().getDistrict().getName(),
                 userEntity.getWards() == null ? null : userEntity.getWards().getName(),
-                null,
+                userEntity.getImageUrl() == null ? avatarDefaultUrl : userEntity.getImageUrl(),
                 userEntity.getDisplayReview(),
                 userEntity.getCreatedDate(),
                 returnTypeOfUser(userEntity));
@@ -227,7 +242,7 @@ public class UserServiceImpl implements UserService {
                 userEntity.getWards() == null ? null : userEntity.getWards().getDistrict().getProvince().getName(),
                 userEntity.getWards() == null ? null : userEntity.getWards().getDistrict().getName(),
                 userEntity.getWards() == null ? null : userEntity.getWards().getName(),
-                null,
+                userEntity.getImageUrl() == null ? avatarDefaultUrl : userEntity.getImageUrl(),
                 userEntity.getDisplayReview(),
                 userEntity.getLocked(),
                 userEntity.getDeleted(),
@@ -237,7 +252,7 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public UserDetailResponse updateUserDetail(Long id, UserDetailRequest requestBody) {
+    public UserDetailResponse updateUserDetail(Long id, UserDetailRequest requestBody, MultipartFile fileImage) {
         UserPrincipal userPrincipal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if(userPrincipal.getId() != id){
             throw new AppException("You do not have role");
@@ -277,6 +292,10 @@ public class UserServiceImpl implements UserService {
             userEntity.setWards(wardsEntity);
         }
 
+        try {
+            userEntity.setImageUrl(imageService.saveAvatarImageGetUrl(fileImage));
+        }catch (Exception e){}
+
         userRepository.save(userEntity);
 
         return new UserDetailResponse(
@@ -289,7 +308,7 @@ public class UserServiceImpl implements UserService {
                 userEntity.getWards() == null ? null : userEntity.getWards().getDistrict().getProvince().getName(),
                 userEntity.getWards() == null ? null : userEntity.getWards().getDistrict().getName(),
                 userEntity.getWards() == null ? null : userEntity.getWards().getName(),
-                null,
+                userEntity.getImageUrl() == null ? null : userEntity.getImageUrl(),
                 userEntity.getDisplayReview(),
                 userEntity.getCreatedDate(),
                 returnTypeOfUser(userEntity));

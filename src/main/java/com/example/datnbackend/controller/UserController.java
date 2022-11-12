@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -51,9 +52,10 @@ public class UserController {
 
     @PutMapping("/{id}")
     ResponseEntity<Object> updateUserDetail(@PathVariable(value = "id") Long id,
-                                            @RequestBody UserDetailRequest requestBody){
+                                            @RequestPart UserDetailRequest requestBody,
+                                            @RequestPart(required = false) MultipartFile file){
         try{
-            return ResponseEntity.ok(userService.updateUserDetail(id, requestBody));
+            return ResponseEntity.ok(userService.updateUserDetail(id, requestBody, file));
         }catch(Exception e){
             return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
         }

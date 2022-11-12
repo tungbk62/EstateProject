@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 
@@ -19,8 +20,14 @@ public class AuthController {
     UserService userService;
 
     @PostMapping(value = "/public/signup")
-    ResponseEntity<SecurityResponse> signup(@Valid @RequestBody UserSignupRequest signupDTO){
-        return ResponseEntity.ok(userService.signup(signupDTO));
+    ResponseEntity<Object> signup(@Valid @RequestPart UserSignupRequest signupDTO,
+                                  @RequestPart(value = "file", required = false) MultipartFile file){
+        try{
+            userService.signup(signupDTO, file);
+            return new ResponseEntity<>(new MainResponse(true, "Đăng ký thành công"), HttpStatus.OK);
+        }catch(Exception e){
+            return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
+        }
     }
 
     @PostMapping(value = "/public/signin")

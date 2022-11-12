@@ -14,5 +14,6 @@ public class UserDescriptionAdminResponse {
     private String lastName;
     private Boolean displayReview;
     private Boolean locked;
+    private String imageUrl;
     private String type;
 }
