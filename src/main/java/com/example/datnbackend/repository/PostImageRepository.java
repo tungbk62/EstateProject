@@ -17,5 +17,14 @@ public interface PostImageRepository extends JpaRepository<PostImageEntity, Long
             "WHERE pi.post.id = ?1 " +
             "AND pi.deleted = FALSE " +
             "AND pi.mainImage = TRUE")
-    PostImageEntity findAllByPostIdAndDeletedFalseAndMainImageFalse(Long postId);
+    PostImageEntity findOneByPostIdAndDeletedFalseAndMainImageTrue(Long postId);
+
+    PostImageEntity findOneByIdAndDeletedFalse(Long id);
+    @Query(value = "SELECT pi.* FROM post_image pi " +
+            "JOIN post p ON p.id = pi.post_id " +
+            "WHERE pi.deleted = 0 " +
+            "AND pi.main_image = 0 " +
+            "AND p.created_by = ?2 " +
+            "AND pi.id IN (?1)", nativeQuery = true)
+    List<PostImageEntity> findAllByIdInAndCreatedByAndMainImageFalse(List<Long> ids, Long userId);
 }

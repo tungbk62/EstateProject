@@ -20,6 +20,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -44,6 +45,8 @@ public class PostServiceImpl implements PostService {
     PostImageRepository postImageRepository;
     @Autowired
     PostReportRepository postReportRepository;
+
+    private final String defaultImageUrl = "default link";
 
     @Override
     public PostDetailForBusinessResponse createPost(PostCreateRequest requestBody) {
@@ -601,23 +604,25 @@ public class PostServiceImpl implements PostService {
                 postEntity.getWards().getDistrict().getProvince().getName(), postEntity.getWards().getDistrict().getName(),
                 postEntity.getWards().getName(), postEntity.getArea(), postEntity.getPriceMonth(), postEntity.getVerified(),
                 postEntity.getCreatedBy().getFirstName() + " " + postEntity.getCreatedBy().getLastName(),
-                postImageEntityList.isEmpty() ? 1 : postImageEntityList.size(),  mainImageEntity == null ? null : mainImageEntity.getUrl(),
+                postImageEntityList.isEmpty() ? 1 : postImageEntityList.size(),  mainImageEntity == null ? defaultImageUrl : mainImageEntity.getUrl(),
                 postEntity.getCreatedDate());
     }
 
     private PostDescriptionForAdminBusinessResponse convertPostEntityToPostDescriptionForAdminBusiness(PostEntity postEntity){
-        PostImageEntity postImageEntity = postImageRepository.findAllByPostIdAndDeletedFalseAndMainImageFalse(postEntity.getId());
+        PostImageEntity postImageEntity = postImageRepository.findOneByPostIdAndDeletedFalseAndMainImageTrue(postEntity.getId());
         return new PostDescriptionForAdminBusinessResponse(postEntity.getId(), postEntity.getTitle(), postEntity.getTypeEstate().getName(),
                 postEntity.getWards().getDistrict().getProvince().getName(), postEntity.getWards().getDistrict().getName(),
                 postEntity.getWards().getName(), postEntity.getExpiredDate(), postEntity.getDeleted(), postEntity.getHide(), postEntity.getLocked(),
                 postEntity.getVerified(), postEntity.getCreatedBy().getFirstName() + " " + postEntity.getCreatedBy().getLastName(),
-                postImageEntity == null ? null : postImageEntity.getUrl(), postEntity.getCreatedDate());
+                postImageEntity == null ? defaultImageUrl : postImageEntity.getUrl(), postEntity.getCreatedDate());
     }
 
     private List<PostImageResponse> getPostImageListByPostId(Long id){
         List<PostImageEntity> postImageEntityList = postImageRepository.findAllByPostIdAndDeletedFalse(id);
         if(postImageEntityList.isEmpty()){
-            return Collections.emptyList();
+            List<PostImageResponse> postImageResponseList = new ArrayList<>();
+            postImageResponseList.add(new PostImageResponse(null, defaultImageUrl, true));
+            return postImageResponseList;
         }
         return postImageEntityList.stream()
                     .map(o -> new PostImageResponse(o.getId(), o.getUrl(), o.getMainImage())).collect(Collectors.toList());

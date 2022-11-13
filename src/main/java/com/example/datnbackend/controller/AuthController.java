@@ -20,10 +20,10 @@ public class AuthController {
     UserService userService;
 
     @PostMapping(value = "/public/signup")
-    ResponseEntity<Object> signup(@Valid @RequestPart UserSignupRequest signupDTO,
+    ResponseEntity<Object> signup(@Valid @RequestPart UserSignupRequest requestBody,
                                   @RequestPart(value = "file", required = false) MultipartFile file){
         try{
-            userService.signup(signupDTO, file);
+            userService.signup(requestBody, file);
             return new ResponseEntity<>(new MainResponse(true, "Đăng ký thành công"), HttpStatus.OK);
         }catch(Exception e){
             return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
@@ -37,9 +37,9 @@ public class AuthController {
 
     @PostMapping(value = "/signup-admin")
     @Secured("ROLE_SUPER_ADMIN")
-    ResponseEntity<Object> signupAdmin(@Valid @RequestBody UserSignupAdminRequest signupDTO){
+    ResponseEntity<Object> signupAdmin(@Valid @RequestBody UserSignupAdminRequest requestBody){
         try{
-            return ResponseEntity.ok(userService.signupAdmin(signupDTO));
+            return ResponseEntity.ok(userService.signupAdmin(requestBody));
         }catch(Exception e){
             return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
         }
