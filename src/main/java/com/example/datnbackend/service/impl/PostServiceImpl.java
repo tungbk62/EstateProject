@@ -46,7 +46,8 @@ public class PostServiceImpl implements PostService {
     @Autowired
     PostReportRepository postReportRepository;
 
-    private final String defaultImageUrl = "default link";
+    private final String imageDefaultUrl = "default link post image";
+    private final String avatarDefaultUrl = "link default avatar";
 
     @Override
     public PostDetailForBusinessResponse createPost(PostCreateRequest requestBody) {
@@ -126,7 +127,7 @@ public class PostServiceImpl implements PostService {
             throw new AppException("Không tìm thấy bài đăng với id: " + id);
         }
 
-        if(getCurrentUserEntity().getId() != postEntity.getCreatedBy().getId()){
+        if(!getCurrentUserEntity().getId().equals(postEntity.getCreatedBy().getId())){
             throw new AppException("Không có quyền chỉnh sửa bài đăng này");
         }
 
@@ -312,7 +313,7 @@ public class PostServiceImpl implements PostService {
             throw new AppException("Không tìm thấy bài đăng với id: " + id);
         }
 
-        if(userEntity.getId() != postEntity.getCreatedBy().getId()){
+        if(!userEntity.getId().equals(postEntity.getCreatedBy().getId())){
             throw new AppException("Không có quyền truy cập bài đăng này");
         }
         return new PostDetailForBusinessResponse(postEntity.getId(), postEntity.getTitle(), postEntity.getDescription(),
@@ -333,7 +334,7 @@ public class PostServiceImpl implements PostService {
             throw new AppException("Không tìm thấy bài đăng với id: " + id);
         }
 
-        if(getCurrentUserEntity().getId() != postEntity.getCreatedBy().getId()){
+        if(!getCurrentUserEntity().getId().equals(postEntity.getCreatedBy().getId())){
             throw new AppException("Không có quyền chỉnh sửa bài đăng này");
         }
 
@@ -350,7 +351,7 @@ public class PostServiceImpl implements PostService {
             if(postEntity == null){
                 throw new AppException("Có id không tìm thấy");
             }
-            if(id != postEntity.getCreatedBy().getId()){
+            if(!id.equals(postEntity.getCreatedBy().getId())){
                 throw new AppException("Có bài viết không có quyền truy cập");
             }
             postEntity.setDeleted(true);
@@ -587,7 +588,7 @@ public class PostServiceImpl implements PostService {
         userDescriptionPostDetailResponse.setFirstName(userEntity.getFirstName());
         userDescriptionPostDetailResponse.setLastName(userEntity.getLastName());
         userDescriptionPostDetailResponse.setPhone(userEntity.getPhone());
-        userDescriptionPostDetailResponse.setImageUrl(userEntity.getImageUrl());
+        userDescriptionPostDetailResponse.setImageUrl(userEntity.getImageUrl() == null ? avatarDefaultUrl : userEntity.getImageUrl());
         userDescriptionPostDetailResponse.setType(returnTypeOfUser(userEntity));
         return userDescriptionPostDetailResponse;
     }
@@ -604,7 +605,7 @@ public class PostServiceImpl implements PostService {
                 postEntity.getWards().getDistrict().getProvince().getName(), postEntity.getWards().getDistrict().getName(),
                 postEntity.getWards().getName(), postEntity.getArea(), postEntity.getPriceMonth(), postEntity.getVerified(),
                 postEntity.getCreatedBy().getFirstName() + " " + postEntity.getCreatedBy().getLastName(),
-                postImageEntityList.isEmpty() ? 1 : postImageEntityList.size(),  mainImageEntity == null ? defaultImageUrl : mainImageEntity.getUrl(),
+                postImageEntityList.isEmpty() ? 1 : postImageEntityList.size(),  mainImageEntity == null ? imageDefaultUrl : mainImageEntity.getUrl(),
                 postEntity.getCreatedDate());
     }
 
@@ -614,14 +615,14 @@ public class PostServiceImpl implements PostService {
                 postEntity.getWards().getDistrict().getProvince().getName(), postEntity.getWards().getDistrict().getName(),
                 postEntity.getWards().getName(), postEntity.getExpiredDate(), postEntity.getDeleted(), postEntity.getHide(), postEntity.getLocked(),
                 postEntity.getVerified(), postEntity.getCreatedBy().getFirstName() + " " + postEntity.getCreatedBy().getLastName(),
-                postImageEntity == null ? defaultImageUrl : postImageEntity.getUrl(), postEntity.getCreatedDate());
+                postImageEntity == null ? imageDefaultUrl : postImageEntity.getUrl(), postEntity.getCreatedDate());
     }
 
     private List<PostImageResponse> getPostImageListByPostId(Long id){
         List<PostImageEntity> postImageEntityList = postImageRepository.findAllByPostIdAndDeletedFalse(id);
         if(postImageEntityList.isEmpty()){
             List<PostImageResponse> postImageResponseList = new ArrayList<>();
-            postImageResponseList.add(new PostImageResponse(null, defaultImageUrl, true));
+            postImageResponseList.add(new PostImageResponse(null, imageDefaultUrl, true));
             return postImageResponseList;
         }
         return postImageEntityList.stream()

@@ -1,11 +1,9 @@
 package com.example.datnbackend.service.impl;
 
+import com.example.datnbackend.dto.email.EmailTemplate;
 import com.example.datnbackend.dto.exception.AppException;
 import com.example.datnbackend.dto.security.*;
-import com.example.datnbackend.dto.user.UserDescriptionAdminResponse;
-import com.example.datnbackend.dto.user.UserDetailAdminResponseRequest;
-import com.example.datnbackend.dto.user.UserDetailRequest;
-import com.example.datnbackend.dto.user.UserDetailResponse;
+import com.example.datnbackend.dto.user.*;
 import com.example.datnbackend.entity.RoleEntity;
 import com.example.datnbackend.entity.UserEntity;
 import com.example.datnbackend.entity.WardsEntity;
@@ -14,8 +12,12 @@ import com.example.datnbackend.repository.UserRepository;
 import com.example.datnbackend.repository.WardsRepository;
 import com.example.datnbackend.security.JwtTokenProvider;
 import com.example.datnbackend.security.UserPrincipal;
+import com.example.datnbackend.service.EmailService;
 import com.example.datnbackend.service.ImageService;
 import com.example.datnbackend.service.UserService;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,12 +31,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -53,8 +53,11 @@ public class UserServiceImpl implements UserService {
     WardsRepository wardsRepository;
     @Autowired
     ImageService imageService;
+    @Autowired
+    EmailService emailService;
 
-    private final String avatarDefaultUrl = "link default";
+    private final String avatarDefaultUrl = "link default avatar";
+    private LoadingCache<String, String> cache;
 
     @Override
     public ResponseEntity<?> signin(UserSigninRequest signinDTO) {
@@ -78,11 +81,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void signup(UserSignupRequest signupDTO, MultipartFile fileImage) {
+    public void signup(UserSignupRequest signupDTO) {
         RoleEntity userRole;
         checkDuplicateField(signupDTO.getEmail(), signupDTO.getPhone());
 
         UserEntity userEntity = new UserEntity();
+
+        if(!isValidEmail(signupDTO.getEmail())){
+            throw new AppException("Email không được để trống");
+        }
         userEntity.setEmail(signupDTO.getEmail());
 
         if(signupDTO.getPassword() == null || signupDTO.getPassword().isEmpty()){
@@ -126,18 +133,11 @@ public class UserServiceImpl implements UserService {
 
         userEntity.setRoles(Collections.singleton(userRole));
 
-        try {
-            userEntity.setImageUrl(imageService.saveAvatarImageGetUrl(fileImage));
-        }catch (Exception e){
-            userEntity.setImageUrl(null);
-        }
-
         userRepository.save(userEntity);
-
     }
 
     @Override
-    public SecurityResponse signupAdmin(UserSignupAdminRequest signupDTO) {
+    public void signupAdmin(UserSignupAdminRequest signupDTO) {
         RoleEntity userRole;
 
         UserEntity userEntity = new UserEntity();
@@ -153,7 +153,7 @@ public class UserServiceImpl implements UserService {
         if(signupDTO.getWardsId() != null){
             WardsEntity wardsEntity = wardsRepository.findOneById(signupDTO.getWardsId());
             if(wardsEntity == null){
-                return new SecurityResponse(false, "Not found address with id: " + signupDTO.getWardsId());
+                throw  new AppException("Not found address with id: " + signupDTO.getWardsId());
             }
             userEntity.setWards(wardsEntity);
         }else {
@@ -162,15 +162,13 @@ public class UserServiceImpl implements UserService {
 
         userRole = roleRepository.findByName(RoleEntity.Name.ROLE_ADMIN);
         if(userRole == null){
-            return new SecurityResponse(false, "User role not exists");
+            throw  new AppException("User role not exists");
         }
         userEntity.setDisplayReview(false);
 
         userEntity.setRoles(Collections.singleton(userRole));
 
         userRepository.save(userEntity);
-
-        return new SecurityResponse(true, "Registered successfully");
     }
 
     @Override
@@ -200,16 +198,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDetailResponse getUserDetail(Long id) {
-        UserPrincipal userPrincipal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if(userPrincipal.getId() != id){
-            throw new AppException("You do not have role");
-        }
-
-        UserEntity userEntity = userRepository.findOneByIdAndDeletedFalseAndLockedFalse(id);
-        if(userEntity == null){
-            throw new AppException("Not found user with id: " + id);
-        }
+    public UserDetailResponse getUserDetail() {
+        UserEntity userEntity = getCurrentUserEntity();
         return new UserDetailResponse(
                 userEntity.getId(),
                 userEntity.getEmail(),
@@ -252,26 +242,18 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public UserDetailResponse updateUserDetail(Long id, UserDetailRequest requestBody, MultipartFile fileImage) {
-        UserPrincipal userPrincipal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if(userPrincipal.getId() != id){
-            throw new AppException("You do not have role");
-        }
-
-        UserEntity userEntity = userRepository.findOneByIdAndDeletedFalseAndLockedFalse(id);
-        if(userEntity == null){
-            throw new AppException("Not found user with id: " + id);
-        }
+    public UserDetailResponse updateUserDetail(UserDetailRequest requestBody) {
+        UserEntity userEntity = getCurrentUserEntity();
 
         if(requestBody.getEmail() != null){
             if(userRepository.findByEmail(requestBody.getEmail()) != null){
-                throw new AppException("Email already exits");
+                throw new AppException("Email đã tồn tại");
             }
             userEntity.setEmail(requestBody.getEmail());
         }
         if(requestBody.getPhone() != null){
             if(userRepository.findByPhone(requestBody.getPhone()) != null){
-                throw new AppException("Phone number already exits");
+                throw new AppException("Số điện thoại đã tồn tại");
             }
             userEntity.setPhone(requestBody.getPhone());
         }
@@ -287,14 +269,10 @@ public class UserServiceImpl implements UserService {
         if(requestBody.getWardsId() != null){
             WardsEntity wardsEntity = wardsRepository.findOneById(requestBody.getWardsId());
             if(wardsEntity == null){
-                throw new AppException("Not found address with id: " + requestBody.getWardsId());
+                throw new AppException("Không tìm thấy phường với id: " + requestBody.getWardsId());
             }
             userEntity.setWards(wardsEntity);
         }
-
-        try {
-            userEntity.setImageUrl(imageService.saveAvatarImageGetUrl(fileImage));
-        }catch (Exception e){}
 
         userRepository.save(userEntity);
 
@@ -318,7 +296,7 @@ public class UserServiceImpl implements UserService {
     public void lockUserAccount(Long id, Boolean locked) {
         UserEntity userEntity = userRepository.findOneByIdAndDeletedFalseWithNormalRole(id);
         if(userEntity == null){
-            throw new AppException("Not found user with id: " + id);
+            throw new AppException("Không tìm thấy user với id: " + id);
         }
         if(locked){
             userEntity.setLocked(true);
@@ -332,7 +310,7 @@ public class UserServiceImpl implements UserService {
     public void displayReviewUserAccount(Long id, Boolean display) {
         UserEntity userEntity = userRepository.findOneByIdAndDeletedFalseWithNormalRole(id);
         if(userEntity == null){
-            throw new AppException("Not found user with id: " + id);
+            throw new AppException("Không tìm thấy user với id: " + id);
         }
         if(display){
             userEntity.setDisplayReview(true);
@@ -348,7 +326,7 @@ public class UserServiceImpl implements UserService {
         for(Long id : ids){
             UserEntity userEntity = userRepository.findOneByIdAndDeletedFalseWithNormalRole(id);
             if(userEntity == null){
-                throw new AppException("Not found user with id: " + id);
+                throw new AppException("Không tìm thấy user với id: " + id);
             }
             userEntity.setDeleted(true);
             userRepository.save(userEntity);
@@ -358,26 +336,124 @@ public class UserServiceImpl implements UserService {
     @Override
     public void changePassword(ChangePasswordRequest requestBody) {
         if(requestBody.getOldPassword() == null || requestBody.getOldPassword().isEmpty()){
-            throw new AppException("Password is not null or not empty");
+            throw new AppException("Mật khẩu không được null hoặc trống");
         }
 
         if(requestBody.getNewPassword() == null || requestBody.getNewPassword().isEmpty()){
-            throw new AppException("Password is not null or not empty");
+            throw new AppException("Mật khẩu không được null hoặc trống");
         }
 
-        UserPrincipal userPrincipal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        UserEntity userEntity = userRepository.findOneByIdAndDeletedFalseAndLockedFalse(userPrincipal.getId());
-
-        if(userEntity == null){
-            throw new AppException("Cannot found user");
-        }
+        UserEntity userEntity = getCurrentUserEntity();
 
         if(!passwordEncoder.matches(requestBody.getOldPassword(), userEntity.getPassword())){
-            throw new AppException("Password is wrong");
+            throw new AppException("Mật khẩu sai");
         }
 
         userEntity.setPassword(passwordEncoder.encode(requestBody.getNewPassword()));
         userRepository.save(userEntity);
+    }
+
+    @Override
+    public void forgetPasswordRequest(ForgetPasswordRequest requestBody) {
+        if(requestBody.getEmail() == null){
+            throw new AppException("Không được null");
+        }
+
+        UserEntity userEntity = userRepository.findOneByEmailAndDeletedFalseAndLockedFalse(requestBody.getEmail());
+        if(userEntity == null){
+            throw new AppException("Không tìm thấy user");
+        }
+
+        cache = CacheBuilder.newBuilder()
+                .expireAfterWrite(5, TimeUnit.MINUTES)
+                .build(new CacheLoader<String, String>() {
+                    @Override
+                    public String load(String key){
+                        return "DEFAULT";
+                    }
+                });
+
+        String otpStr = generateOTP().toString();
+        cache.put(requestBody.getEmail(), otpStr);
+
+        EmailTemplate template = new EmailTemplate("email-otp.html");
+
+        Map<String,String> replacements = new HashMap<>();
+        String firstName = userEntity.getFirstName() == null ? "" : userEntity.getFirstName();
+        String lastName = userEntity.getLastName() == null ? "" : userEntity.getLastName();
+
+        replacements.put("user", firstName + " " + lastName);
+        replacements.put("otpnum", otpStr);
+
+        String message = template.getTemplate(replacements);
+
+        emailService.sendOtpMessage(requestBody.getEmail(), "DATN - OTP", message);
+    }
+
+    @Override
+    public ForgetPasswordOTPResponse forgetPasswordOTPRequest(ForgetPasswordOTPRequest requestBody) {
+        if(requestBody.getEmail() == null || requestBody.getOtp() == null){
+            throw new AppException("Không được null");
+        }
+
+        String otpStr = cache.getIfPresent(requestBody.getEmail());
+        if(otpStr == null){
+            throw new AppException("Mã OTP đã hết hiệu lực");
+        }
+        Integer otp = Integer.parseInt(otpStr);
+        cache.invalidate(requestBody.getEmail());
+
+        if(!otp.equals(requestBody.getOtp())){
+            throw new AppException("Mã OTP không chính xác, yêu cầu thực hiện lại từ bước đầu");
+        }
+
+        cache = CacheBuilder.newBuilder()
+                .expireAfterWrite(30, TimeUnit.MINUTES)
+                .build(new CacheLoader<String, String>() {
+                    @Override
+                    public String load(String key){
+                        return "DEFAULT";
+                    }
+                });
+
+        String uuid = UUID.randomUUID().toString();
+        cache.put(requestBody.getEmail(), uuid);
+
+        return new ForgetPasswordOTPResponse(uuid);
+    }
+
+    @Override
+    public void forgetPasswordChangeRequest(ForgetPasswordChangeRequest requestBody) {
+        if(requestBody.getEmail() == null || requestBody.getToken() == null || requestBody.getNewPassword() == null || requestBody.getNewPassword().isEmpty()){
+            throw new AppException("Không được null hoặc rỗng");
+        }
+
+        String securityTokenStr = cache.getIfPresent(requestBody.getEmail());
+        cache.invalidate(requestBody.getEmail());
+        if(securityTokenStr == null || !securityTokenStr.equals(requestBody.getToken())){
+            cache = null;
+            throw new AppException("Không thành công");
+        }
+
+        cache = null;
+
+        UserEntity userEntity = userRepository.findOneByEmailAndDeletedFalseAndLockedFalse(requestBody.getEmail());
+        if(userEntity == null){
+            throw new AppException("Không tìm thấy user");
+        }
+
+        userEntity.setPassword(passwordEncoder.encode(requestBody.getNewPassword()));
+        userRepository.save(userEntity);
+    }
+
+    private UserEntity getCurrentUserEntity(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        UserEntity userEntity = userRepository.findOneByIdAndDeletedFalseAndLockedFalse(userPrincipal.getId());
+        if(userEntity == null){
+            throw new AppException("Không tìm thấy user hiện tại");
+        }
+        return userEntity;
     }
 
     private Boolean checkAuthorities(List<String> compareAuthorities, UserPrincipal userPrincipal){
@@ -414,5 +490,25 @@ public class UserServiceImpl implements UserService {
         }else {
             return null;
         }
+    }
+
+    private Boolean isValidEmail(String email)
+    {
+        String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\."+
+                "[a-zA-Z0-9_+&*-]+)*@" +
+                "(?:[a-zA-Z0-9-]+\\.)+[a-z" +
+                "A-Z]{2,7}$";
+
+        Pattern pattern = Pattern.compile(emailRegex);
+        if (email == null || email.isEmpty()){
+            return false;
+        }
+        return pattern.matcher(email).matches();
+    }
+
+    private Integer generateOTP(){
+        Random random = new Random();
+        Integer number = 100000;
+        return number + random.nextInt(900000);
     }
 }

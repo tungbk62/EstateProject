@@ -31,10 +31,10 @@ public class UserController {
         }
     }
 
-    @GetMapping("/{id}")
-    ResponseEntity<Object> getUserDetail(@PathVariable(value = "id") Long id){
+    @GetMapping
+    ResponseEntity<Object> getUserDetail(){
         try{
-            return ResponseEntity.ok(userService.getUserDetail(id));
+            return ResponseEntity.ok(userService.getUserDetail());
         }catch(Exception e){
             return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
         }
@@ -50,12 +50,10 @@ public class UserController {
         }
     }
 
-    @PutMapping("/{id}")
-    ResponseEntity<Object> updateUserDetail(@PathVariable(value = "id") Long id,
-                                            @RequestPart UserDetailRequest requestBody,
-                                            @RequestPart(required = false) MultipartFile file){
+    @PutMapping
+    ResponseEntity<Object> updateUserDetail(@RequestBody UserDetailRequest requestBody){
         try{
-            return ResponseEntity.ok(userService.updateUserDetail(id, requestBody, file));
+            return ResponseEntity.ok(userService.updateUserDetail(requestBody));
         }catch(Exception e){
             return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
         }

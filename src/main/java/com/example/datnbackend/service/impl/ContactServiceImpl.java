@@ -106,7 +106,7 @@ public class ContactServiceImpl implements ContactService {
             throw new AppException("Không tìm thấy yêu cầu liên hệ");
         }
         UserEntity currentUserEntity = getCurrentUserEntity();
-        if(currentUserEntity.getId() != contactRequestEntity.getUserBusiness().getId()){
+        if(currentUserEntity.getId().equals(contactRequestEntity.getUserBusiness().getId())){
             throw new AppException("Không có quyền truy cập");
         }
 
@@ -127,7 +127,7 @@ public class ContactServiceImpl implements ContactService {
             throw new AppException("Không tìm thấy yêu cầu liên hệ");
         }
         UserEntity currentUserEntity = getCurrentUserEntity();
-        if(currentUserEntity.getId() != contactRequestEntity.getUserBusiness().getId()){
+        if(currentUserEntity.getId().equals(contactRequestEntity.getUserBusiness().getId())){
             throw new AppException("Không có quyền truy cập");
         }
 

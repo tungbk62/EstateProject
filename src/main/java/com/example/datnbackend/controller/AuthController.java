@@ -2,6 +2,9 @@ package com.example.datnbackend.controller;
 
 import com.example.datnbackend.dto.MainResponse;
 import com.example.datnbackend.dto.security.*;
+import com.example.datnbackend.dto.user.ForgetPasswordChangeRequest;
+import com.example.datnbackend.dto.user.ForgetPasswordOTPRequest;
+import com.example.datnbackend.dto.user.ForgetPasswordRequest;
 import com.example.datnbackend.entity.RoleEntity;
 import com.example.datnbackend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,10 +23,9 @@ public class AuthController {
     UserService userService;
 
     @PostMapping(value = "/public/signup")
-    ResponseEntity<Object> signup(@Valid @RequestPart UserSignupRequest requestBody,
-                                  @RequestPart(value = "file", required = false) MultipartFile file){
+    ResponseEntity<Object> signup(@Valid @RequestBody UserSignupRequest requestBody){
         try{
-            userService.signup(requestBody, file);
+            userService.signup(requestBody);
             return new ResponseEntity<>(new MainResponse(true, "Đăng ký thành công"), HttpStatus.OK);
         }catch(Exception e){
             return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
@@ -39,7 +41,8 @@ public class AuthController {
     @Secured("ROLE_SUPER_ADMIN")
     ResponseEntity<Object> signupAdmin(@Valid @RequestBody UserSignupAdminRequest requestBody){
         try{
-            return ResponseEntity.ok(userService.signupAdmin(requestBody));
+            userService.signupAdmin(requestBody);
+            return new ResponseEntity<>(new MainResponse(true, "Đăng ký thành công"), HttpStatus.OK);
         }catch(Exception e){
             return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
         }
@@ -50,6 +53,35 @@ public class AuthController {
         try{
             userService.changePassword(requestBody);
             return ResponseEntity.ok(new MainResponse(true, "Change password successfully"));
+        }catch(Exception e){
+            return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
+        }
+    }
+
+    @PostMapping(value = "/public/password/forget")
+    ResponseEntity<Object> forgetPasswordRequest(@RequestBody ForgetPasswordRequest requestBody){
+        try{
+            userService.forgetPasswordRequest(requestBody);
+            return ResponseEntity.ok(new MainResponse(true, "Mã OTP đã được gửi tới email của bạn"));
+        }catch(Exception e){
+            return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
+        }
+    }
+
+    @PostMapping(value = "/public/password/forget/otp")
+    ResponseEntity<Object> forgetPasswordOTPRequest(@RequestBody ForgetPasswordOTPRequest requestBody){
+        try{
+            return ResponseEntity.ok(userService.forgetPasswordOTPRequest(requestBody));
+        }catch(Exception e){
+            return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
+        }
+    }
+
+    @PostMapping(value = "/public/password/forget/change")
+    ResponseEntity<Object> forgetPasswordChangeRequest(@RequestBody ForgetPasswordChangeRequest requestBody){
+        try{
+            userService.forgetPasswordChangeRequest(requestBody);
+            return ResponseEntity.ok(new MainResponse(true, "Thay mật khẩu thành công"));
         }catch(Exception e){
             return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
         }

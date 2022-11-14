@@ -27,7 +27,7 @@ public class AddressServiceImpl implements AddressService {
     public List<ProvinceResponse> getAllProvince() {
         List<ProvinceEntity> provinceEntityList = provinceRepository.findAll();
         if(provinceEntityList.isEmpty()){
-            throw new AppException("Cannot get list of province");
+            throw new AppException("Danh sách các tỉnh trống");
         }
         List<ProvinceResponse> provinceResponseList = provinceEntityList.stream()
                 .map(o -> new ProvinceResponse(o.getId(), o.getName())).collect(Collectors.toList());
@@ -38,7 +38,7 @@ public class AddressServiceImpl implements AddressService {
     public ProvinceDetailResponse getProvinceDetail(Long id) {
         ProvinceEntity provinceEntity = provinceRepository.findOneById(id);
         if(provinceEntity == null){
-            throw new AppException("Cannot find province with id: " + id);
+            throw new AppException("Không tìm thấy tỉnh với id: " + id);
         }
         List<DistrictEntity> districtEntityList = provinceEntity.getDistrictList();
         List<DistrictDetailResponse> districtDetailResponseList;

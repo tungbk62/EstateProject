@@ -96,7 +96,7 @@ public class ImageServiceImpl implements ImageService {
 
         UserEntity currentUser = getCurrentUserEntity();
 
-        if(currentUser.getId() != postEntity.getCreatedBy().getId()){
+        if(currentUser.getId().equals(postEntity.getCreatedBy().getId())){
             throw new AppException("Không có quyền sửa bài viết");
         }
 
@@ -148,7 +148,6 @@ public class ImageServiceImpl implements ImageService {
 
             postImageEntity.setUrl(imageUrl);
             postImageRepository.save(postImageEntity);
-
         }
     }
 
@@ -161,7 +160,7 @@ public class ImageServiceImpl implements ImageService {
 
         UserEntity currentUser = getCurrentUserEntity();
 
-        if(currentUser.getId() != postEntity.getCreatedBy().getId()){
+        if(!currentUser.getId().equals(postEntity.getCreatedBy().getId())){
             throw new AppException("Không có quyền");
         }
 
@@ -181,7 +180,7 @@ public class ImageServiceImpl implements ImageService {
         }
 
         PostEntity postEntity = postImageEntity.getPost();
-        if(postEntity.getCreatedBy().getId() != getCurrentUserEntity().getId()){
+        if(!postEntity.getCreatedBy().getId().equals(getCurrentUserEntity().getId())){
             throw new AppException("Không có quyền chỉnh sửa");
         }
 

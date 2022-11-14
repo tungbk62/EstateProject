@@ -61,7 +61,7 @@ public class ReviewServiceImpl implements ReviewService {
         if(reviewEntity == null){
             throw new AppException("Không tìm thấy đánh giá");
         }
-        if(reviewEntity.getCreatedBy().getId() != getCurrentUserEntity().getId()){
+        if(reviewEntity.getCreatedBy().getId().equals(getCurrentUserEntity().getId())){
             throw new AppException("Không có quyền chỉnh sửa đánh giá");
         }
 
