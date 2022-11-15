@@ -20,7 +20,6 @@ public class EmailServiceImpl implements EmailService {
 //        simpleMailMessage.setTo(to);
 //        simpleMailMessage.setSubject(subject);
 //        simpleMailMessage.setText(message);
-
         try {
             MimeMessage mailMessage = javaMailSender.createMimeMessage();
             mailMessage.setSubject(subject, "UTF-8");

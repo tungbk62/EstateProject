@@ -14,6 +14,7 @@ import com.example.datnbackend.repository.UserRepository;
 import com.example.datnbackend.security.UserPrincipal;
 import com.example.datnbackend.service.ImageService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -37,7 +38,8 @@ public class ImageServiceImpl implements ImageService {
     @Autowired
     AmazonS3 amazonS3;
 
-    private final String bucketName = "datnbucket1";
+    @Value("${aws.bucketName}")
+    private String bucketName;
     @Override
     public void updateAvatarImage(MultipartFile file) {
         if(file == null || file.isEmpty()){

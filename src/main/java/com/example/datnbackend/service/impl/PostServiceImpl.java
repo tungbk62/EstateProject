@@ -9,6 +9,7 @@ import com.example.datnbackend.repository.*;
 import com.example.datnbackend.security.UserPrincipal;
 import com.example.datnbackend.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
@@ -46,8 +47,10 @@ public class PostServiceImpl implements PostService {
     @Autowired
     PostReportRepository postReportRepository;
 
-    private final String imageDefaultUrl = "default link post image";
-    private final String avatarDefaultUrl = "link default avatar";
+    @Value("${image.post.default}")
+    private String imageDefaultUrl;
+    @Value("${image.avatar.default}")
+    private String avatarDefaultUrl;
 
     @Override
     public PostDetailForBusinessResponse createPost(PostCreateRequest requestBody) {

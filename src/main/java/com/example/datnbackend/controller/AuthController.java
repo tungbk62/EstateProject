@@ -14,6 +14,7 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 @RestController
@@ -77,11 +78,21 @@ public class AuthController {
         }
     }
 
-    @PostMapping(value = "/public/password/forget/change")
+    @PostMapping(value = "/password/forget/change")
     ResponseEntity<Object> forgetPasswordChangeRequest(@RequestBody ForgetPasswordChangeRequest requestBody){
         try{
             userService.forgetPasswordChangeRequest(requestBody);
             return ResponseEntity.ok(new MainResponse(true, "Thay mật khẩu thành công"));
+        }catch(Exception e){
+            return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
+        }
+    }
+
+    @PostMapping(value = "/logout")
+    ResponseEntity<Object> logout(){
+        try{
+            userService.logout();
+            return ResponseEntity.ok(new MainResponse(true, "Logout thành công"));
         }catch(Exception e){
             return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
         }

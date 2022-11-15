@@ -5,20 +5,21 @@ import com.example.datnbackend.dto.exception.AppException;
 import com.example.datnbackend.dto.security.*;
 import com.example.datnbackend.dto.user.*;
 import com.example.datnbackend.entity.RoleEntity;
+import com.example.datnbackend.entity.TokenExpiredEntity;
 import com.example.datnbackend.entity.UserEntity;
 import com.example.datnbackend.entity.WardsEntity;
 import com.example.datnbackend.repository.RoleRepository;
+import com.example.datnbackend.repository.TokenExpiredRepository;
 import com.example.datnbackend.repository.UserRepository;
 import com.example.datnbackend.repository.WardsRepository;
 import com.example.datnbackend.security.JwtTokenProvider;
 import com.example.datnbackend.security.UserPrincipal;
+import com.example.datnbackend.service.CacheService;
 import com.example.datnbackend.service.EmailService;
 import com.example.datnbackend.service.ImageService;
 import com.example.datnbackend.service.UserService;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -31,7 +32,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -52,12 +55,17 @@ public class UserServiceImpl implements UserService {
     @Autowired
     WardsRepository wardsRepository;
     @Autowired
-    ImageService imageService;
+    TokenExpiredRepository tokenExpiredRepository;
+    @Autowired
+    HttpServletRequest httpServletRequest;
     @Autowired
     EmailService emailService;
 
-    private final String avatarDefaultUrl = "link default avatar";
-    private LoadingCache<String, String> cache;
+    @Autowired
+    CacheService cacheService;
+
+    @Value("${image.avatar.default}")
+    private String avatarDefaultUrl;
 
     @Override
     public ResponseEntity<?> signin(UserSigninRequest signinDTO) {
@@ -298,11 +306,7 @@ public class UserServiceImpl implements UserService {
         if(userEntity == null){
             throw new AppException("Không tìm thấy user với id: " + id);
         }
-        if(locked){
-            userEntity.setLocked(true);
-        }else{
-            userEntity.setLocked(false);
-        }
+        userEntity.setLocked(locked);
         userRepository.save(userEntity);
     }
 
@@ -312,11 +316,7 @@ public class UserServiceImpl implements UserService {
         if(userEntity == null){
             throw new AppException("Không tìm thấy user với id: " + id);
         }
-        if(display){
-            userEntity.setDisplayReview(true);
-        }else{
-            userEntity.setDisplayReview(false);
-        }
+        userEntity.setDisplayReview(display);
         userRepository.save(userEntity);
     }
 
@@ -364,17 +364,8 @@ public class UserServiceImpl implements UserService {
             throw new AppException("Không tìm thấy user");
         }
 
-        cache = CacheBuilder.newBuilder()
-                .expireAfterWrite(5, TimeUnit.MINUTES)
-                .build(new CacheLoader<String, String>() {
-                    @Override
-                    public String load(String key){
-                        return "DEFAULT";
-                    }
-                });
-
         String otpStr = generateOTP().toString();
-        cache.put(requestBody.getEmail(), otpStr);
+        cacheService.put(requestBody.getEmail(), otpStr);
 
         EmailTemplate template = new EmailTemplate("email-otp.html");
 
@@ -396,55 +387,43 @@ public class UserServiceImpl implements UserService {
             throw new AppException("Không được null");
         }
 
-        String otpStr = cache.getIfPresent(requestBody.getEmail());
+        String otpStr = cacheService.getIfPresent(requestBody.getEmail());
         if(otpStr == null){
             throw new AppException("Mã OTP đã hết hiệu lực");
         }
         Integer otp = Integer.parseInt(otpStr);
-        cache.invalidate(requestBody.getEmail());
+        cacheService.invalidKey(requestBody.getEmail());
 
         if(!otp.equals(requestBody.getOtp())){
             throw new AppException("Mã OTP không chính xác, yêu cầu thực hiện lại từ bước đầu");
         }
-
-        cache = CacheBuilder.newBuilder()
-                .expireAfterWrite(30, TimeUnit.MINUTES)
-                .build(new CacheLoader<String, String>() {
-                    @Override
-                    public String load(String key){
-                        return "DEFAULT";
-                    }
-                });
-
-        String uuid = UUID.randomUUID().toString();
-        cache.put(requestBody.getEmail(), uuid);
-
-        return new ForgetPasswordOTPResponse(uuid);
-    }
-
-    @Override
-    public void forgetPasswordChangeRequest(ForgetPasswordChangeRequest requestBody) {
-        if(requestBody.getEmail() == null || requestBody.getToken() == null || requestBody.getNewPassword() == null || requestBody.getNewPassword().isEmpty()){
-            throw new AppException("Không được null hoặc rỗng");
-        }
-
-        String securityTokenStr = cache.getIfPresent(requestBody.getEmail());
-        cache.invalidate(requestBody.getEmail());
-        if(securityTokenStr == null || !securityTokenStr.equals(requestBody.getToken())){
-            cache = null;
-            throw new AppException("Không thành công");
-        }
-
-        cache = null;
 
         UserEntity userEntity = userRepository.findOneByEmailAndDeletedFalseAndLockedFalse(requestBody.getEmail());
         if(userEntity == null){
             throw new AppException("Không tìm thấy user");
         }
 
+        return new ForgetPasswordOTPResponse(jwtTokenProvider.generateTokenForgetPassword(userEntity), "bearer");
+    }
+
+    @Override
+    public void forgetPasswordChangeRequest(ForgetPasswordChangeRequest requestBody) {
+        if(requestBody.getNewPassword() == null || requestBody.getNewPassword().isEmpty()){
+            throw new AppException("Không được null hoặc rỗng");
+        }
+
+        UserEntity userEntity = getCurrentUserEntity();
+
         userEntity.setPassword(passwordEncoder.encode(requestBody.getNewPassword()));
         userRepository.save(userEntity);
+        saveTokenExpired();
     }
+
+    @Override
+    public void logout() {
+        saveTokenExpired();
+    }
+
 
     private UserEntity getCurrentUserEntity(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -510,5 +489,22 @@ public class UserServiceImpl implements UserService {
         Random random = new Random();
         Integer number = 100000;
         return number + random.nextInt(900000);
+    }
+
+    private String getJwtFromRequest(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7, bearerToken.length());
+        }
+        return null;
+    }
+
+    private void saveTokenExpired(){
+        String token = getJwtFromRequest(httpServletRequest);
+        if(token != null){
+            TokenExpiredEntity tokenExpiredEntity = new TokenExpiredEntity();
+            tokenExpiredEntity.setToken(token);
+            tokenExpiredRepository.save(tokenExpiredEntity);
+        }
     }
 }

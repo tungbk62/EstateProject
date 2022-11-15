@@ -5,6 +5,7 @@ import com.example.datnbackend.dto.user.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 public interface UserService {
@@ -22,5 +23,6 @@ public interface UserService {
     void forgetPasswordRequest(ForgetPasswordRequest requestBody);
     ForgetPasswordOTPResponse forgetPasswordOTPRequest(ForgetPasswordOTPRequest requestBody);
     void forgetPasswordChangeRequest(ForgetPasswordChangeRequest requestBody);
+    void logout();
 
 }

@@ -1,5 +1,8 @@
 package com.example.datnbackend.security;
 
+import com.example.datnbackend.dto.exception.AppException;
+import com.example.datnbackend.entity.TokenExpiredEntity;
+import com.example.datnbackend.repository.TokenExpiredRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -28,12 +31,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Autowired
     private CustomUserDetailsService customUserDetailsService;
+    @Autowired
+    TokenExpiredRepository tokenExpiredRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         logger.info("doFilterInternal");
         try {
             String jwt = getJwtFromRequest(request);
+
+            TokenExpiredEntity tokenExpiredEntity = tokenExpiredRepository.findOneByToken(jwt);
+            if(tokenExpiredEntity != null){
+                throw new AppException("Đã logout khỏi hệ thống");
+            }
 
             if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
                 logger.info("jwt");
@@ -46,7 +56,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception ex) {
-            logger.info("Could not set user authentication in security context" + ex.toString());
+            logger.info("Could not set user authentication in security context " + ex.toString());
         }
 
         filterChain.doFilter(request, response);
