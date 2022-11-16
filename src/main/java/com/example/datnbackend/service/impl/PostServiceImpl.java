@@ -257,9 +257,9 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<PostDescriptionForAdminBusinessResponse> getPostDescriptionListForAdmin(Integer page, Integer size) {
+    public List<PostDescriptionForAdminBusinessResponse> getPostDescriptionListForAdmin(Integer page, Integer size, Long userId) {
         Pageable pageable = PageRequest.of(page, size);
-        List<PostEntity> postEntityList = postRepository.findAllByDeletedFalse(pageable);
+        List<PostEntity> postEntityList = postRepository.findAllByDeletedFalse(userId, pageable);
         if(postEntityList.isEmpty()){
             return Collections.emptyList();
         }
@@ -613,12 +613,19 @@ public class PostServiceImpl implements PostService {
     }
 
     private PostDescriptionForAdminBusinessResponse convertPostEntityToPostDescriptionForAdminBusiness(PostEntity postEntity){
-        PostImageEntity postImageEntity = postImageRepository.findOneByPostIdAndDeletedFalseAndMainImageTrue(postEntity.getId());
+        List<PostImageEntity> postImageEntityList = postImageRepository.findAllByPostIdAndDeletedFalse(postEntity.getId());
+        PostImageEntity mainImageEntity;
+        if(!postImageEntityList.isEmpty()){
+            mainImageEntity = postImageEntityList.stream().filter(o -> o.getMainImage() == true).findFirst().get();
+        }else {
+            mainImageEntity = null;
+        }
         return new PostDescriptionForAdminBusinessResponse(postEntity.getId(), postEntity.getTitle(), postEntity.getTypeEstate().getName(),
                 postEntity.getWards().getDistrict().getProvince().getName(), postEntity.getWards().getDistrict().getName(),
                 postEntity.getWards().getName(), postEntity.getExpiredDate(), postEntity.getDeleted(), postEntity.getHide(), postEntity.getLocked(),
                 postEntity.getVerified(), postEntity.getCreatedBy().getFirstName() + " " + postEntity.getCreatedBy().getLastName(),
-                postImageEntity == null ? imageDefaultUrl : postImageEntity.getUrl(), postEntity.getCreatedDate());
+                postImageEntityList.isEmpty() ? 1 : postImageEntityList.size(),
+                mainImageEntity == null ? imageDefaultUrl : mainImageEntity.getUrl(), postEntity.getCreatedDate());
     }
 
     private List<PostImageResponse> getPostImageListByPostId(Long id){

@@ -12,7 +12,7 @@ public interface PostService {
                                                          Double areamin, Double areamax);
     List<PostDescriptionResponse> getPostDescriptionListSearch(Integer page, Integer size, String order, String search);
     List<PostDescriptionForAdminBusinessResponse> getPostDescriptionListForBusiness(Integer page, Integer size);
-    List<PostDescriptionForAdminBusinessResponse> getPostDescriptionListForAdmin(Integer page, Integer size);
+    List<PostDescriptionForAdminBusinessResponse> getPostDescriptionListForAdmin(Integer page, Integer size, Long userId);
     PostDetailResponse getPostDetail(Long id);
     PostDetailForAdminResponse getPostDetailForAdmin(Long id);
     PostDetailForBusinessResponse getPostDetailForBusiness(Long id);

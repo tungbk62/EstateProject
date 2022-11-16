@@ -76,7 +76,11 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
     @Query(value = "SELECT p.* FROM post p " +
             "WHERE p.deleted = 0 AND p.created_by = :createdById", nativeQuery = true)
     List<PostEntity> findAllByCreatedByIdAndDeletedFalse(@Param("createdById") Long id, Pageable pageable);
-    List<PostEntity> findAllByDeletedFalse(Pageable pageable);
+
+    @Query(value = "SELECT p.* FROM post p " +
+            "WHERE p.deleted = 0 " +
+            "AND ((?1 IS NULL) OR (p.created_by = ?1))", nativeQuery = true)
+    List<PostEntity> findAllByDeletedFalse(Long userId, Pageable pageable);
 
     @Query(value = "SELECT p.* FROM post p " +
             "JOIN post_save ps ON p.id = ps.post_id " +

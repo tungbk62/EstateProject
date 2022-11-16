@@ -7,7 +7,6 @@ import java.util.List;
 
 public interface ImageService {
     void updateAvatarImage(MultipartFile file);
-    String saveAvatarImageGetUrl(MultipartFile file);
     void uploadPostImage(Long id, List<MultipartFile> files, Integer main);
     List<PostImageResponse> getPostImage(Long id);
     void changeMainImage(Long id);

@@ -86,9 +86,10 @@ public class PostController {
     @GetMapping(value = "/admin/list")
     @Secured("ROLE_ADMIN")
     ResponseEntity<Object> getPostDescriptionListForAdmin(@RequestParam Integer page,
-                                                          @RequestParam Integer size) {
+                                                          @RequestParam Integer size,
+                                                          @RequestParam(value = "userId", required = false) Long userId) {
         try {
-            return ResponseEntity.ok(postService.getPostDescriptionListForAdmin(page, size));
+            return ResponseEntity.ok(postService.getPostDescriptionListForAdmin(page, size, userId));
         } catch (Exception e) {
             return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
         }

@@ -24,6 +24,7 @@ public class PostDescriptionForAdminBusinessResponse {
     private Boolean locked;
     private Boolean verified;
     private String createdBy;
+    private Integer imageNumber;
     private String mainImageUrl;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdDate;

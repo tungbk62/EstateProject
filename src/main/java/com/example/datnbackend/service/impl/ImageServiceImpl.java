@@ -35,11 +35,14 @@ public class ImageServiceImpl implements ImageService {
     PostRepository postRepository;
     @Autowired
     PostImageRepository postImageRepository;
-    @Autowired
-    AmazonS3 amazonS3;
-
+//    @Autowired
+//    AmazonS3 amazonS3;
     @Value("${aws.bucketName}")
     private String bucketName;
+    @Value("${image.post.default}")
+    private String imageDefaultUrl;
+    @Value("${image.avatar.default}")
+    private String avatarDefaultUrl;
     @Override
     public void updateAvatarImage(MultipartFile file) {
         if(file == null || file.isEmpty()){
@@ -55,8 +58,8 @@ public class ImageServiceImpl implements ImageService {
         String imageUrl;
 
         try {
-            imageUrl = saveImageToS3(bucketName, filename, Optional.of(metadata), file);
-            userEntity.setImageUrl(imageUrl);
+//            imageUrl = saveImageToS3(bucketName, filename, Optional.of(metadata), file);
+            userEntity.setImageUrl(avatarDefaultUrl);
             userRepository.save(userEntity);
         }catch (Exception e){
             throw new AppException(e.getMessage());
@@ -65,30 +68,18 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public String saveAvatarImageGetUrl(MultipartFile file) {
-        if(file == null || file.isEmpty()){
-            throw new IllegalStateException("File trống");
-        }
-        checkImageFile(file);
-        Map<String, String> metadata = extractMetadata(file);
-
-        String filename = String.format("%s/%s", "avatar", UUID.randomUUID());
-
-        try {
-            return saveImageToS3(bucketName, filename, Optional.of(metadata), file);
-        }catch (Exception e){
-            throw new AppException(e.getMessage());
-        }
-    }
-
-    @Override
     public void uploadPostImage(Long id, List<MultipartFile> files, Integer main) {
+        if(files == null || files.isEmpty()){
+            throw new AppException("Không có files");
+        }
+
+        int size = files.size();
+        if(size > 10){
+            throw new AppException("Tối đa 10 ảnh");
+        }
+
         if(id == null){
             throw new AppException("Không có id bài viết");
-        }
-
-        if(files == null || files.isEmpty()){
-            throw new AppException("Không có file");
         }
 
         PostEntity postEntity = postRepository.findOneByIdAndDeletedFalseAndLockedFalse(id);
@@ -104,22 +95,22 @@ public class ImageServiceImpl implements ImageService {
 
         List<PostImageEntity> postImageEntityList = postImageRepository.findAllByPostIdAndDeletedFalse(id);
         if(postImageEntityList.isEmpty()){
-            if(main == null || main < 1 || main > files.size()){
+            if(main == null || main < 1 || main > size){
                 throw new AppException("Phải chọn main image");
+            }
+        }else {
+            if(main != null && main >= 1 && main <= size) {
+                PostImageEntity postImageEntity = postImageRepository.findOneByPostIdAndDeletedFalseAndMainImageTrue(id);
+                if (postImageEntity == null) {
+                    throw new AppException("Không thành công");
+                }
+
+                postImageEntity.setMainImage(false);
+                postImageRepository.save(postImageEntity);
             }else {
-                main = main - 1;
+                main = null;
             }
-        }else if(main != null){
-            PostImageEntity postImageEntity = postImageRepository.findOneByPostIdAndDeletedFalseAndMainImageTrue(id);
-            if(postImageEntity == null){
-                throw new AppException("Không thành công");
-            }
-
-            postImageEntity.setMainImage(false);
-            postImageRepository.save(postImageEntity);
         }
-
-        int size = files.size();
 
         for (int i = 0 ; i < size; i++){
             MultipartFile file = files.get(i);
@@ -130,7 +121,7 @@ public class ImageServiceImpl implements ImageService {
             PostImageEntity postImageEntity = new PostImageEntity();
             postImageEntity.setPost(postEntity);
             postImageEntity.setDeleted(false);
-            if(main != null && i == main){
+            if(main != null && i + 1 == main){
                 postImageEntity.setMainImage(true);
             }else {
                 postImageEntity.setMainImage(false);
@@ -221,22 +212,23 @@ public class ImageServiceImpl implements ImageService {
 
 
     public String saveImageToS3(String path, String fileName, Optional<Map<String, String>> optionalMetadata, MultipartFile file) {
-        ObjectMetadata metadata = new ObjectMetadata();
-
-        optionalMetadata.ifPresent(map -> {
-            if (!map.isEmpty()) {
-                map.forEach(metadata::addUserMetadata);
-            }
-        });
-
-        try {
-            amazonS3.putObject(path, fileName, file.getInputStream(), metadata);
-            return amazonS3.getUrl(path, fileName).toString();
-        } catch (AmazonServiceException e) {
-            throw new AmazonServiceException("Failed to store file to s3", e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+//        ObjectMetadata metadata = new ObjectMetadata();
+//
+//        optionalMetadata.ifPresent(map -> {
+//            if (!map.isEmpty()) {
+//                map.forEach(metadata::addUserMetadata);
+//            }
+//        });
+//
+//        try {
+//            amazonS3.putObject(path, fileName, file.getInputStream(), metadata);
+//            return amazonS3.getUrl(path, fileName).toString();
+//        } catch (AmazonServiceException e) {
+//            throw new AmazonServiceException("Failed to store file to s3", e);
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+        return imageDefaultUrl;
     }
 
     private Map<String, String> extractMetadata(MultipartFile file) {
