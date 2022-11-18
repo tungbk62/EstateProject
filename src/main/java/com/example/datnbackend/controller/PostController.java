@@ -3,6 +3,7 @@ package com.example.datnbackend.controller;
 import com.example.datnbackend.dto.MainResponse;
 import com.example.datnbackend.dto.post.PostCreateRequest;
 import com.example.datnbackend.dto.post.PostReportCreateRequest;
+import com.example.datnbackend.dto.post.PostUpdateTypeRequest;
 import com.example.datnbackend.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -75,9 +76,10 @@ public class PostController {
     @GetMapping(value = "/business/list")
     @Secured("ROLE_BUSINESS")
     ResponseEntity<Object> getPostDescriptionListForBusiness(@RequestParam Integer page,
-                                                             @RequestParam Integer size) {
+                                                             @RequestParam Integer size,
+                                                             @RequestParam(value = "typePostId", required = false) Long typePostId) {
         try {
-            return ResponseEntity.ok(postService.getPostDescriptionListForBusiness(page, size));
+            return ResponseEntity.ok(postService.getPostDescriptionListForBusiness(page, size, typePostId));
         } catch (Exception e) {
             return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
         }
@@ -87,9 +89,10 @@ public class PostController {
     @Secured("ROLE_ADMIN")
     ResponseEntity<Object> getPostDescriptionListForAdmin(@RequestParam Integer page,
                                                           @RequestParam Integer size,
-                                                          @RequestParam(value = "userId", required = false) Long userId) {
+                                                          @RequestParam(value = "userId", required = false) Long userId,
+                                                          @RequestParam(value = "typePostId", required = false) Long typePostId) {
         try {
-            return ResponseEntity.ok(postService.getPostDescriptionListForAdmin(page, size, userId));
+            return ResponseEntity.ok(postService.getPostDescriptionListForAdmin(page, size, userId, typePostId));
         } catch (Exception e) {
             return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
         }
@@ -245,6 +248,28 @@ public class PostController {
         try{
             postService.deletePostReport(ids);
             return new ResponseEntity<>(new MainResponse(true, "Xoá thành công"), HttpStatus.OK);
+        }catch(Exception e){
+            return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
+        }
+    }
+
+    @GetMapping(value = "/type")
+    @Secured({"ROLE_ADMIN", "ROLE_BUSINESS"})
+    ResponseEntity<Object> getAllTypePost(){
+        try{
+            return ResponseEntity.ok(postService.getAllTypePost());
+        }catch(Exception e){
+            return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
+        }
+    }
+
+    @PutMapping(value = "/business/type/{id}")
+    @Secured("ROLE_BUSINESS")
+    ResponseEntity<Object> changeTypePost(@RequestParam(value = "typePostId") Long typePostId,
+                                          @PathVariable(value = "id") Long id){
+        try{
+            postService.changeTypePost(id, typePostId);
+            return new ResponseEntity<>(new MainResponse(true, "Thay đổi thành công"), HttpStatus.OK);
         }catch(Exception e){
             return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
         }

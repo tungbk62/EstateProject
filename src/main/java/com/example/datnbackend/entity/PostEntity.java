@@ -81,6 +81,10 @@ public class PostEntity {
     @Column(name = "modified_date")
     private LocalDateTime modifiedDate;
 
+    @ManyToOne
+    @JoinColumn(name = "type_post_id", nullable = false)
+    private TypePostEntity typePost;
+
     @PrePersist
     void prePersist(){
         createdDate = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC);

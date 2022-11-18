@@ -18,7 +18,7 @@ public class TypeReportController {
     TypeReportService typeReportService;
 
     @PostMapping(value = "/admin")
-    @Secured("ROLE_ADMIN")
+    @Secured({"ROLE_ADMIN", "ROLE_SUPER_ADMIN"})
     ResponseEntity<Object> createTypeReport(@RequestBody TypeReportRequest requestBody){
         try{
             return ResponseEntity.ok(typeReportService.createTypeReport(requestBody));
@@ -38,7 +38,7 @@ public class TypeReportController {
     }
 
     @PutMapping(value = "/admin/{id}")
-    @Secured("ROLE_ADMIN")
+    @Secured({"ROLE_ADMIN", "ROLE_SUPER_ADMIN"})
     ResponseEntity<Object> updateTypeReport(@PathVariable(value = "id") Long id,
                                             @RequestBody TypeReportRequest requestBody){
         try{
@@ -48,8 +48,8 @@ public class TypeReportController {
         }
     }
 
-    @DeleteMapping(value = "/admin")
-    @Secured("ROLE_ADMIN")
+    @DeleteMapping(value = "/super-admin")
+    @Secured("ROLE_SUPER_ADMIN")
     ResponseEntity<Object> deleteTypeReport(@RequestBody List<Long> ids){
         try{
             typeReportService.deleteTypeReport(ids);

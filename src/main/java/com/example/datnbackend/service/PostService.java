@@ -1,6 +1,7 @@
 package com.example.datnbackend.service;
 
 import com.example.datnbackend.dto.post.*;
+import com.example.datnbackend.dto.type.TypePostResponse;
 
 import java.util.List;
 
@@ -11,8 +12,8 @@ public interface PostService {
                                                          Long wards, List<Long> type, Integer room, Double pricemin, Double pricemax,
                                                          Double areamin, Double areamax);
     List<PostDescriptionResponse> getPostDescriptionListSearch(Integer page, Integer size, String order, String search);
-    List<PostDescriptionForAdminBusinessResponse> getPostDescriptionListForBusiness(Integer page, Integer size);
-    List<PostDescriptionForAdminBusinessResponse> getPostDescriptionListForAdmin(Integer page, Integer size, Long userId);
+    List<PostDescriptionForAdminBusinessResponse> getPostDescriptionListForBusiness(Integer page, Integer size, Long typePostId);
+    List<PostDescriptionForAdminBusinessResponse> getPostDescriptionListForAdmin(Integer page, Integer size, Long userId, Long typePostId);
     PostDetailResponse getPostDetail(Long id);
     PostDetailForAdminResponse getPostDetailForAdmin(Long id);
     PostDetailForBusinessResponse getPostDetailForBusiness(Long id);
@@ -27,4 +28,6 @@ public interface PostService {
     PostReportDetailResponse getPostReportDetail(Long id);
     void changeHandledState(Long id, Boolean handled);
     void deletePostReport(List<Long> ids);
+    List<TypePostResponse> getAllTypePost();
+    void changeTypePost(Long id, Long typePostId);
 }

@@ -147,6 +147,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void signupAdmin(UserSignupAdminRequest signupDTO) {
         RoleEntity userRole;
+        checkDuplicateField(signupDTO.getEmail(), signupDTO.getPhone());
 
         UserEntity userEntity = new UserEntity();
         userEntity.setEmail(signupDTO.getEmail());
@@ -254,13 +255,13 @@ public class UserServiceImpl implements UserService {
         UserEntity userEntity = getCurrentUserEntity();
 
         if(requestBody.getEmail() != null){
-            if(userRepository.findByEmail(requestBody.getEmail()) != null){
+            if(userRepository.findByEmailAndDeletedFalse(requestBody.getEmail()) != null){
                 throw new AppException("Email đã tồn tại");
             }
             userEntity.setEmail(requestBody.getEmail());
         }
         if(requestBody.getPhone() != null){
-            if(userRepository.findByPhone(requestBody.getPhone()) != null){
+            if(userRepository.findByPhoneAndDeletedFalse(requestBody.getPhone()) != null){
                 throw new AppException("Số điện thoại đã tồn tại");
             }
             userEntity.setPhone(requestBody.getPhone());
@@ -446,12 +447,12 @@ public class UserServiceImpl implements UserService {
 
     private void checkDuplicateField(String email, String phone){
 
-        if(email != null && userRepository.findByEmail(email) != null){
-            throw new AppException("Email already exits");
+        if(email != null && userRepository.findByEmailAndDeletedFalse(email) != null){
+            throw new AppException("Email đã tồn tại");
         }
 
-        if(phone != null && userRepository.findByPhone(phone) != null){
-            throw new AppException("Phone number already exits");
+        if(phone != null && userRepository.findByPhoneAndDeletedFalse(phone) != null){
+            throw new AppException("Số điện thoại đã tồn tại");
         }
     }
 

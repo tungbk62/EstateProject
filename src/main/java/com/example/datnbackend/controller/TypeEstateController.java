@@ -18,7 +18,7 @@ public class TypeEstateController {
     TypeEstateService typeEstateService;
 
     @PostMapping(value = "/admin")
-    @Secured("ROLE_ADMIN")
+    @Secured({"ROLE_ADMIN", "ROLE_SUPER_ADMIN"})
     ResponseEntity<Object> createTypeEstate(@RequestBody TypeEstateRequest requestBody){
         try{
             return ResponseEntity.ok(typeEstateService.createTypeEstate(requestBody));
@@ -38,7 +38,7 @@ public class TypeEstateController {
     }
 
     @PutMapping(value = "/admin/{id}")
-    @Secured("ROLE_ADMIN")
+    @Secured({"ROLE_ADMIN", "ROLE_SUPER_ADMIN"})
     ResponseEntity<Object> updateTypeEstate(@PathVariable(value = "id") Long id,
                                             @RequestBody TypeEstateRequest requestBody){
         try{
@@ -48,8 +48,8 @@ public class TypeEstateController {
         }
     }
 
-    @DeleteMapping(value = "/admin")
-    @Secured("ROLE_ADMIN")
+    @DeleteMapping(value = "/super-admin")
+    @Secured("ROLE_SUPER_ADMIN")
     ResponseEntity<Object> deleteTypeEstate(@RequestBody List<Long> ids){
         try{
             typeEstateService.deleteTypeEstate(ids);

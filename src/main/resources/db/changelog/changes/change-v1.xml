@@ -9,18 +9,14 @@
             <column name="id" type="int" autoIncrement="true">
                 <constraints primaryKey="true"/>
             </column>
-            <column name="email" type="varchar(250)">
-                <constraints nullable="false" unique="true"/>
-            </column>
+            <column name="email" type="varchar(250)"/>
             <column name="password" type="varchar(500)">
                 <constraints nullable="false"/>
             </column>
             <column name="first_name" type="varchar(250)"/>
             <column name="last_name" type="varchar(250)"/>
             <column name="birthday" type="date"/>
-            <column name="phone" type="varchar(20)">
-                <constraints unique="true"/>
-            </column>
+            <column name="phone" type="varchar(20)"/>
             <column name="wards_id" type="int"/>
             <column name="image_url" type="varchar(500)"/>
             <column name="display_review" type="boolean">

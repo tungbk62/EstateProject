@@ -33,6 +33,7 @@ public class PostDetailForAdminResponse {
     private Boolean locked;
     private Boolean verified;
     private Integer view;
+    private String typePost;
     private List<PostImageResponse> imageList;
     private UserDescriptionPostDetailResponse createdBy;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")

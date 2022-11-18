@@ -14,8 +14,8 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
     @Query("SELECT u FROM UserEntity u WHERE u.email = ?1 AND u.deleted = FALSE")
     Optional<UserEntity> findByEmailWithDeletedFalse(String email);
-    UserEntity findByEmail(String email);
-    UserEntity findByPhone(String phone);
+    UserEntity findByEmailAndDeletedFalse(String email);
+    UserEntity findByPhoneAndDeletedFalse(String phone);
     @Query("SELECT u FROM UserEntity u WHERE u.email = ?1 AND u.locked = FALSE")
     UserEntity findByEmailWithLockedIsFalse(String email);
     @Query("SELECT u FROM UserEntity u WHERE u.id = ?1 AND u.deleted = FALSE AND u.locked = FALSE")

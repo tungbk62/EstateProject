@@ -2,6 +2,7 @@ package com.example.datnbackend.service.impl;
 
 import com.example.datnbackend.dto.exception.AppException;
 import com.example.datnbackend.dto.post.*;
+import com.example.datnbackend.dto.type.TypePostResponse;
 import com.example.datnbackend.dto.user.UserDescriptionPostDetailResponse;
 import com.example.datnbackend.dto.user.UserDescriptionReviewResponse;
 import com.example.datnbackend.entity.*;
@@ -46,6 +47,8 @@ public class PostServiceImpl implements PostService {
     PostImageRepository postImageRepository;
     @Autowired
     PostReportRepository postReportRepository;
+    @Autowired
+    TypePostRepository typePostRepository;
 
     @Value("${image.post.default}")
     private String imageDefaultUrl;
@@ -109,6 +112,14 @@ public class PostServiceImpl implements PostService {
         }
         postEntity.setExpiredDate(requestBody.getExpiredDate());
 
+        Long typePostId = requestBody.getTypePostId();
+        TypePostEntity typePostEntity = typePostRepository.findOneById(typePostId == null ? 4 : typePostId);
+        if(typePostEntity == null){
+            throw new AppException("Không tìm thấy loại bài đăng");
+        }
+
+        postEntity.setTypePost(typePostEntity);
+
         postEntity = postRepository.save(postEntity);
 
 
@@ -117,7 +128,8 @@ public class PostServiceImpl implements PostService {
                 postEntity.getWards().getDistrict().getName(), postEntity.getWards().getName(), postEntity.getAddressDetail(),
                 postEntity.getArea(), postEntity.getPriceMonth(), postEntity.getFurniture(), postEntity.getRoom(),
                 postEntity.getBathRoom(), postEntity.getExpiredDate(), postEntity.getDeleted(), postEntity.getHide(),
-                postEntity.getLocked(), postEntity.getVerified(), postEntity.getView(), getPostImageListByPostId(postEntity.getId()),
+                postEntity.getLocked(), postEntity.getVerified(), postEntity.getView(),
+                postEntity.getTypePost().getName(),getPostImageListByPostId(postEntity.getId()),
                 convertEntityToDescriptionPostDetailResponse(postEntity.getCreatedBy()), postEntity.getCreatedDate(),
                 postEntity.getModifiedDate());
     }
@@ -186,7 +198,9 @@ public class PostServiceImpl implements PostService {
                 postEntity.getWards().getDistrict().getName(), postEntity.getWards().getName(), postEntity.getAddressDetail(),
                 postEntity.getArea(), postEntity.getPriceMonth(), postEntity.getFurniture(), postEntity.getRoom(),
                 postEntity.getBathRoom(), postEntity.getExpiredDate(), postEntity.getDeleted(), postEntity.getHide(),
-                postEntity.getLocked(), postEntity.getVerified(), postEntity.getView(), getPostImageListByPostId(postEntity.getId()),
+                postEntity.getLocked(), postEntity.getVerified(), postEntity.getView(),
+                postEntity.getTypePost().getName(),
+                getPostImageListByPostId(postEntity.getId()),
                 convertEntityToDescriptionPostDetailResponse(postEntity.getCreatedBy()), postEntity.getCreatedDate(),
                 postEntity.getModifiedDate());
     }
@@ -245,10 +259,10 @@ public class PostServiceImpl implements PostService {
 
 
     @Override
-    public List<PostDescriptionForAdminBusinessResponse> getPostDescriptionListForBusiness(Integer page, Integer size) {
+    public List<PostDescriptionForAdminBusinessResponse> getPostDescriptionListForBusiness(Integer page, Integer size, Long typePostId) {
         UserEntity currentUser = getCurrentUserEntity();
         Pageable pageable = PageRequest.of(page, size);
-        List<PostEntity> postEntityList = postRepository.findAllByCreatedByIdAndDeletedFalse(currentUser.getId(), pageable);
+        List<PostEntity> postEntityList = postRepository.findAllByCreatedByIdAndDeletedFalse(currentUser.getId(), typePostId, pageable);
         if(postEntityList.isEmpty()){
             return Collections.emptyList();
         }
@@ -257,9 +271,9 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<PostDescriptionForAdminBusinessResponse> getPostDescriptionListForAdmin(Integer page, Integer size, Long userId) {
+    public List<PostDescriptionForAdminBusinessResponse> getPostDescriptionListForAdmin(Integer page, Integer size, Long userId, Long typePostId) {
         Pageable pageable = PageRequest.of(page, size);
-        List<PostEntity> postEntityList = postRepository.findAllByDeletedFalse(userId, pageable);
+        List<PostEntity> postEntityList = postRepository.findAllByDeletedFalse(userId, typePostId, pageable);
         if(postEntityList.isEmpty()){
             return Collections.emptyList();
         }
@@ -302,7 +316,9 @@ public class PostServiceImpl implements PostService {
                 postEntity.getWards().getDistrict().getName(), postEntity.getWards().getName(), postEntity.getAddressDetail(),
                 postEntity.getArea(), postEntity.getPriceMonth(), postEntity.getFurniture(), postEntity.getRoom(),
                 postEntity.getBathRoom(), postEntity.getExpiredDate(), postEntity.getDeleted(), postEntity.getHide(),
-                postEntity.getLocked(), postEntity.getVerified(), postEntity.getView(), getPostImageListByPostId(postEntity.getId()),
+                postEntity.getLocked(), postEntity.getVerified(), postEntity.getView(),
+                postEntity.getTypePost().getName(),
+                getPostImageListByPostId(postEntity.getId()),
                 convertEntityToDescriptionPostDetailResponse(postEntity.getCreatedBy()), postEntity.getCreatedDate(),
                 postEntity.getModifiedDate());
     }
@@ -324,7 +340,9 @@ public class PostServiceImpl implements PostService {
                 postEntity.getWards().getDistrict().getName(), postEntity.getWards().getName(), postEntity.getAddressDetail(),
                 postEntity.getArea(), postEntity.getPriceMonth(), postEntity.getFurniture(), postEntity.getRoom(),
                 postEntity.getBathRoom(), postEntity.getExpiredDate(), postEntity.getDeleted(), postEntity.getHide(),
-                postEntity.getLocked(), postEntity.getVerified(), postEntity.getView(), getPostImageListByPostId(postEntity.getId()),
+                postEntity.getLocked(), postEntity.getVerified(), postEntity.getView(),
+                postEntity.getTypePost().getName(),
+                getPostImageListByPostId(postEntity.getId()),
                 convertEntityToDescriptionPostDetailResponse(postEntity.getCreatedBy()), postEntity.getCreatedDate(),
                 postEntity.getModifiedDate());
     }
@@ -548,6 +566,38 @@ public class PostServiceImpl implements PostService {
         }
     }
 
+    @Override
+    public List<TypePostResponse> getAllTypePost() {
+        List<TypePostEntity> typePostEntityList = typePostRepository.findAll();
+        if(typePostEntityList.isEmpty()){
+            return Collections.emptyList();
+        }
+        return typePostEntityList.stream().map(o -> new TypePostResponse(o.getId(), o.getName())).collect(Collectors.toList());
+    }
+
+    @Override
+    public void changeTypePost(Long id, Long typePostId) {
+        if(typePostId == null){
+            throw new AppException("Phải chọn kiểu bài đăng");
+        }
+        UserEntity currentUser = getCurrentUserEntity();
+        TypePostEntity typePostEntity = typePostRepository.findOneById(typePostId);
+        if(typePostEntity == null){
+            throw new AppException("Không tìm thấy kiểu bài đăng");
+        }
+
+        PostEntity postEntity = postRepository.findOneByIdAndDeletedFalseAndLockedFalse(id);
+        if(postEntity == null){
+            throw new AppException("Không tìm thấy bài đăng");
+        }
+        if(!postEntity.getCreatedBy().getId().equals(currentUser.getId())){
+            throw new AppException("Không có quyền chỉnh sửa bài đăng này");
+        }
+
+        postEntity.setTypePost(typePostEntity);
+        postRepository.save(postEntity);
+    }
+
 
     private UserEntity getCurrentUserEntity(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -624,7 +674,7 @@ public class PostServiceImpl implements PostService {
                 postEntity.getWards().getDistrict().getProvince().getName(), postEntity.getWards().getDistrict().getName(),
                 postEntity.getWards().getName(), postEntity.getExpiredDate(), postEntity.getDeleted(), postEntity.getHide(), postEntity.getLocked(),
                 postEntity.getVerified(), postEntity.getCreatedBy().getFirstName() + " " + postEntity.getCreatedBy().getLastName(),
-                postImageEntityList.isEmpty() ? 1 : postImageEntityList.size(),
+                postImageEntityList.isEmpty() ? 1 : postImageEntityList.size(), postEntity.getTypePost().getName(),
                 mainImageEntity == null ? imageDefaultUrl : mainImageEntity.getUrl(), postEntity.getCreatedDate());
     }
 
