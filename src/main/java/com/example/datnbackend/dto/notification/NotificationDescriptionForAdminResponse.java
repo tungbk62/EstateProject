@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 public class NotificationDescriptionForAdminResponse {
     private Long id;
     private UserDescriptionNotificationResponse user;
-    private String message;
     private String typeNotification;
     private Boolean viewed;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")

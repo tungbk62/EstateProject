@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class NotificationDescriptionForBusinessResponse {
     private Long id;
-    private String message;
     private String typeNotification;
     private Boolean viewed;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")

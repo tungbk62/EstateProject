@@ -124,7 +124,7 @@ public class NotificationServiceImpl implements NotificationService {
         }
 
         return notificationEntityList.stream().map(o -> new NotificationDescriptionForAdminResponse(
-                o.getId(), convertEntityToUserDescriptionNotificationResponse(o.getUser()), o.getMessage(),
+                o.getId(), convertEntityToUserDescriptionNotificationResponse(o.getUser()),
                 o.getTypeNotification().getName(), o.getViewed(), o.getCreatedDate())).collect(Collectors.toList());
     }
 
@@ -146,7 +146,7 @@ public class NotificationServiceImpl implements NotificationService {
         }
 
         return notificationEntityList.stream().map(o -> new NotificationDescriptionForBusinessResponse(
-                o.getId(), o.getMessage(), o.getTypeNotification().getName(), o.getViewed(), o.getCreatedDate()
+                o.getId(), o.getTypeNotification().getName(), o.getViewed(), o.getCreatedDate()
         )).collect(Collectors.toList());
     }
 
