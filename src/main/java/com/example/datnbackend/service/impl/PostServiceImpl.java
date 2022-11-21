@@ -206,7 +206,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<PostDescriptionResponse> getPostDescriptionList(Integer page, Integer size, String order,
+    public List<PostDescriptionResponse> getPostDescriptionList(Integer page, Integer size, String order, String search,
                                                                 Long province, Long district, Long wards,
                                                                 List<Long> type, Integer room, Double pricemin,
                                                                 Double pricemax, Double areamin, Double areamax) {
@@ -217,38 +217,15 @@ public class PostServiceImpl implements PostService {
             order = order.toUpperCase();
         }
         Pageable pageable = PageRequest.of(page, size);
-        List<PostEntity> postEntityList = postRepository.findAllWithFilterWithDeletedFalseAndHideFalseAndLockedFalse(order, province, district, wards,
-                 type, room, pricemin, pricemax, areamin, areamax, pageable);
 
-        if(postEntityList.isEmpty()){
-            return Collections.emptyList();
-        }
-        return postEntityList.stream()
-                .map(o -> convertPostEntityToPostDescription(o)).collect(Collectors.toList());
-    }
-
-    @Override
-    public List<PostDescriptionResponse> getPostDescriptionListSearch(Integer page, Integer size, String order, String search) {
-        List<String> orderType = Arrays.asList("DATEASC", "DATEDESC", "PRICEASC", "PRICEDESC", "AREAASC", "AREADESC");
-        if(order == null || !orderType.contains(order.toUpperCase())){
-            order = null;
-        }else {
-            order = order.toUpperCase();
-        }
-        Pageable pageable = PageRequest.of(page, size);
         if(search == null || search.isEmpty()){
             search = null;
         }else {
             search = search.toUpperCase();
         }
 
-        List<PostEntity> postEntityList = postRepository
-                .findAllWithSearchWithDeletedFalseAndHideFalseAndLockedFalse(order, search, pageable);
-
-        if(postEntityList.isEmpty()){
-            postEntityList = postRepository.findAllWithFilterWithDeletedFalseAndHideFalseAndLockedFalse(order, null,
-                    null, null, null, null, null, null, null, null, pageable);
-        }
+        List<PostEntity> postEntityList = postRepository.findAllWithFilterWithDeletedFalseAndHideFalseAndLockedFalse(order, search, province, district, wards,
+                 type, room, pricemin, pricemax, areamin, areamax, pageable);
 
         if(postEntityList.isEmpty()){
             return Collections.emptyList();

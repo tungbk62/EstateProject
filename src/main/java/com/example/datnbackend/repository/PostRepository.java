@@ -21,8 +21,16 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
             "JOIN wards w ON p.wards_id = w.id " +
             "JOIN district d ON w.district_id = d.id " +
             "JOIN province pr ON d.province_id = pr.id " +
+            "JOIN type_estate te ON p.type_estate_id = te.id " +
             "JOIN type_post tp ON p.type_post_id = tp.id " +
-            "WHERE ((:province IS NULL) OR (pr.id = :province)) " +
+            "WHERE ((:search IS NULL) OR (" +
+            "(UPPER(w.name) LIKE CONCAT('%', :search, '%')) " +
+            "OR (UPPER(d.name) LIKE CONCAT('%', :search, '%')) " +
+            "OR (UPPER(pr.name) LIKE CONCAT('%', :search, '%')) " +
+            "OR (UPPER(p.address_detail) LIKE CONCAT('%', :search, '%')) " +
+            "OR (UPPER(p.title) LIKE CONCAT('%', :search, '%')) " +
+            "OR (UPPER(te.name) LIKE CONCAT('%', :search, '%')))) " +
+            "AND ((:province IS NULL) OR (pr.id = :province)) " +
             "AND ((:district IS NULL) OR (d.id = :district)) " +
             "AND ((:wards IS NULL) OR (w.id = :wards)) " +
             "AND ((COALESCE(:type) IS NULL) OR (p.type_estate_id IN (:type))) " +
@@ -43,7 +51,9 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
             "CASE WHEN :order = 'AREAASC' THEN p.area END ASC, " +
             "CASE WHEN :order = 'AREADESC' THEN p.area END DESC"
     ,nativeQuery = true)
-    List<PostEntity> findAllWithFilterWithDeletedFalseAndHideFalseAndLockedFalse(@Param("order") String order, @Param("province") Long province,
+    List<PostEntity> findAllWithFilterWithDeletedFalseAndHideFalseAndLockedFalse(@Param("order") String order,
+                                                                                 @Param("search") String search,
+                                                                                 @Param("province") Long province,
                                                                                  @Param("district") Long district,
                                                                                  @Param("wards") Long wards,
                                                                                  @Param("type") List<Long> type, @Param("room") Integer room,
@@ -51,37 +61,6 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
                                                                                  @Param("pricemax") Double pricemax,
                                                                                  @Param("areamin") Double areamin,
                                                                                  @Param("areamax") Double areamax, Pageable pageable);
-
-    @Query(value = "SELECT p.* FROM post p " +
-            "JOIN wards w ON p.wards_id = w.id " +
-            "JOIN district d ON w.district_id = d.id " +
-            "JOIN province pr ON d.province_id = pr.id " +
-            "JOIN type_estate te ON p.type_estate_id = te.id " +
-            "JOIN type_post tp ON p.type_post_id = tp.id " +
-            "WHERE ((:search IS NULL) OR (" +
-            "(UPPER(w.name) LIKE CONCAT('%', :search, '%')) " +
-            "OR (UPPER(d.name) LIKE CONCAT('%', :search, '%')) " +
-            "OR (UPPER(pr.name) LIKE CONCAT('%', :search, '%')) " +
-            "OR (UPPER(p.address_detail) LIKE CONCAT('%', :search, '%')) " +
-            "OR (UPPER(p.title) LIKE CONCAT('%', :search, '%')) " +
-            "OR (UPPER(te.name) LIKE CONCAT('%', :search, '%')))) " +
-            "AND p.deleted = 0 AND p.locked = 0 AND p.hide = 0 " +
-            "ORDER BY " +
-            "CASE WHEN tp.id = 1 THEN 1 " +
-            "WHEN tp.id = 2 THEN 2 " +
-            "WHEN tp.id = 3 THEN 3 " +
-            "ELSE 4 END ASC, " +
-            "CASE WHEN :order IS NULL THEN NULL END, " +
-            "CASE WHEN :order = 'DATEASC' THEN p.created_date END ASC, " +
-            "CASE WHEN :order = 'DATEDESC' THEN p.created_date END DESC, " +
-            "CASE WHEN :order = 'PRICEASC' THEN p.price_month END ASC, " +
-            "CASE WHEN :order = 'PRICEDESC' THEN p.price_month END DESC, " +
-            "CASE WHEN :order = 'AREAASC' THEN p.area END ASC, " +
-            "CASE WHEN :order = 'AREADESC' THEN p.area END DESC"
-            ,nativeQuery = true)
-    List<PostEntity> findAllWithSearchWithDeletedFalseAndHideFalseAndLockedFalse(@Param("order") String order,
-                                                                                 @Param("search") String search,
-                                                                                 Pageable pageable);
 
     @Query(value = "SELECT p.* FROM post p " +
             "WHERE p.deleted = 0 " +

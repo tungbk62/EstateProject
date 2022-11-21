@@ -44,6 +44,7 @@ public class PostController {
     ResponseEntity<Object> getPostDescriptionList(@RequestParam Integer page,
                                                   @RequestParam Integer size,
                                                   @RequestParam(required = false) String order,
+                                                  @RequestParam(required = false) String search,
                                                   @RequestParam(required = false) Long province,
                                                   @RequestParam(required = false) Long district,
                                                   @RequestParam(required = false) Long wards,
@@ -54,20 +55,8 @@ public class PostController {
                                                   @RequestParam(required = false) Double areamin,
                                                   @RequestParam(required = false) Double areamax){
         try{
-            return ResponseEntity.ok(postService.getPostDescriptionList(page, size, order, province, district, wards,
+            return ResponseEntity.ok(postService.getPostDescriptionList(page, size, order, search, province, district, wards,
                     type, room, pricemin, pricemax, areamin, areamax));
-        }catch(Exception e){
-            return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
-        }
-    }
-
-    @GetMapping(value = "/public/list/search")
-    ResponseEntity<Object> getPostDescriptionListSearch(@RequestParam Integer page,
-                                                        @RequestParam Integer size,
-                                                        @RequestParam(required = false) String order,
-                                                        @RequestParam(required = false) String search){
-        try{
-            return ResponseEntity.ok(postService.getPostDescriptionListSearch(page, size, order, search));
         }catch(Exception e){
             return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
         }
