@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserDetailRequest {
-    private Long id;
     private String email;
     private String firstName;
     private String lastName;

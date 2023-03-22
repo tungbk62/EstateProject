@@ -47,13 +47,15 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public NotificationDetailForAdminResponse createNotification(NotificationCreateRequest requestBody) {
-        if(requestBody.getTypeNotificationId() == null || requestBody.getUserId() == null || requestBody.getMessage() == null){
+    public void createNotification(NotificationCreateRequest requestBody) {
+        if(requestBody.getTypeNotificationId() == null || requestBody.getUserIds() == null
+                || requestBody.getUserIds().isEmpty()
+                || requestBody.getMessage() == null){
             throw new AppException("Không được null");
         }
 
-        UserEntity normalUserEntity = userRepository.findOneByIdAndDeletedFalseWithNormalRole(requestBody.getUserId());
-        if(normalUserEntity == null){
+        List<UserEntity> normalUserEntity = userRepository.findOneByIdAndDeletedFalseWithNormalRoleAndIdIn(requestBody.getUserIds());
+        if(normalUserEntity == null || normalUserEntity.isEmpty()){
             throw new AppException("Không tìm thấy user thường");
         }
 
@@ -63,20 +65,16 @@ public class NotificationServiceImpl implements NotificationService {
         }
 
         UserEntity currentUser = getCurrentUserEntity();
-
-        NotificationEntity notificationEntity = new NotificationEntity();
-        notificationEntity.setUser(normalUserEntity);
-        notificationEntity.setMessage(requestBody.getMessage());
-        notificationEntity.setCreatedBy(currentUser);
-        notificationEntity.setDeleted(false);
-        notificationEntity.setViewed(false);
-        notificationEntity.setTypeNotification(typeNotificationEntity);
-
-        notificationEntity = notificationRepository.save(notificationEntity);
-        return new NotificationDetailForAdminResponse(notificationEntity.getId(),
-                convertEntityToUserDescriptionNotificationResponse(notificationEntity.getUser()), notificationEntity.getMessage(),
-                notificationEntity.getTypeNotification().getName(), notificationEntity.getViewed(),
-                convertEntityToUserDescriptionNotificationResponse(notificationEntity.getCreatedBy()), notificationEntity.getCreatedDate());
+        for(UserEntity i : normalUserEntity){
+            NotificationEntity notificationEntity = new NotificationEntity();
+            notificationEntity.setUser(i);
+            notificationEntity.setMessage(requestBody.getMessage());
+            notificationEntity.setCreatedBy(currentUser);
+            notificationEntity.setDeleted(false);
+            notificationEntity.setViewed(false);
+            notificationEntity.setTypeNotification(typeNotificationEntity);
+            notificationRepository.save(notificationEntity);
+        }
     }
 
     @Override
@@ -125,7 +123,7 @@ public class NotificationServiceImpl implements NotificationService {
 
         return notificationEntityList.stream().map(o -> new NotificationDescriptionForAdminResponse(
                 o.getId(), convertEntityToUserDescriptionNotificationResponse(o.getUser()),
-                o.getTypeNotification().getName(), o.getViewed(), o.getCreatedDate())).collect(Collectors.toList());
+                o.getTypeNotification().getName(), o.getViewed(), o.getMessage(), o.getCreatedDate())).collect(Collectors.toList());
     }
 
     @Override

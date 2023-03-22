@@ -103,6 +103,8 @@ public class PostServiceImpl implements PostService {
         postEntity.setVerified(false);
         postEntity.setView(0);
         postEntity.setCreatedBy(getCurrentUserEntity());
+        postEntity.setLongitude(requestBody.getLongitude());
+        postEntity.setLatitude(requestBody.getLatitude());
 
         if(requestBody.getExpiredDate() != null){
             LocalDateTime currentTime = getCurrentDateUTC();
@@ -124,12 +126,12 @@ public class PostServiceImpl implements PostService {
 
 
         return new PostDetailForBusinessResponse(postEntity.getId(), postEntity.getTitle(), postEntity.getDescription(),
-                postEntity.getTypeEstate().getName(), postEntity.getWards().getDistrict().getProvince().getName(),
-                postEntity.getWards().getDistrict().getName(), postEntity.getWards().getName(), postEntity.getAddressDetail(),
+                postEntity.getTypeEstate().getId(),postEntity.getWards().getDistrict().getProvince().getId(),
+                postEntity.getWards().getDistrict().getId(), postEntity.getWards().getId(), postEntity.getAddressDetail(),
                 postEntity.getArea(), postEntity.getPriceMonth(), postEntity.getFurniture(), postEntity.getRoom(),
-                postEntity.getBathRoom(), postEntity.getExpiredDate(), postEntity.getDeleted(), postEntity.getHide(),
+                postEntity.getBathRoom(), postEntity.getExpiredDate(), postEntity.getLongitude(), postEntity.getLatitude(), postEntity.getDeleted(), postEntity.getHide(),
                 postEntity.getLocked(), postEntity.getVerified(), postEntity.getView(),
-                postEntity.getTypePost().getName(),getPostImageListByPostId(postEntity.getId()),
+                postEntity.getTypePost().getId(),getPostImageListByPostId(postEntity.getId()),
                 convertEntityToDescriptionPostDetailResponse(postEntity.getCreatedBy()), postEntity.getCreatedDate(),
                 postEntity.getModifiedDate());
     }
@@ -190,16 +192,25 @@ public class PostServiceImpl implements PostService {
             }
             postEntity.setExpiredDate(requestBody.getExpiredDate());
         }
+
+        if(requestBody.getLongitude() != null){
+            postEntity.setLongitude(requestBody.getLongitude());
+        }
+
+        if(requestBody.getLatitude() != null){
+            postEntity.setLatitude(requestBody.getLatitude());
+        }
+
         postEntity.setModifiedDate(getCurrentDateUTC());
 
         postEntity = postRepository.save(postEntity);
         return new PostDetailForBusinessResponse(postEntity.getId(), postEntity.getTitle(), postEntity.getDescription(),
-                postEntity.getTypeEstate().getName(), postEntity.getWards().getDistrict().getProvince().getName(),
-                postEntity.getWards().getDistrict().getName(), postEntity.getWards().getName(), postEntity.getAddressDetail(),
+                postEntity.getTypeEstate().getId(), postEntity.getWards().getDistrict().getProvince().getId(),
+                postEntity.getWards().getDistrict().getId(), postEntity.getWards().getId(), postEntity.getAddressDetail(),
                 postEntity.getArea(), postEntity.getPriceMonth(), postEntity.getFurniture(), postEntity.getRoom(),
-                postEntity.getBathRoom(), postEntity.getExpiredDate(), postEntity.getDeleted(), postEntity.getHide(),
+                postEntity.getBathRoom(), postEntity.getExpiredDate(), postEntity.getLongitude(), postEntity.getLatitude(), postEntity.getDeleted(), postEntity.getHide(),
                 postEntity.getLocked(), postEntity.getVerified(), postEntity.getView(),
-                postEntity.getTypePost().getName(),
+                postEntity.getTypePost().getId(),
                 getPostImageListByPostId(postEntity.getId()),
                 convertEntityToDescriptionPostDetailResponse(postEntity.getCreatedBy()), postEntity.getCreatedDate(),
                 postEntity.getModifiedDate());
@@ -270,7 +281,7 @@ public class PostServiceImpl implements PostService {
                 postEntity.getTypeEstate().getName(), postEntity.getWards().getDistrict().getProvince().getName(),
                 postEntity.getWards().getDistrict().getName(), postEntity.getWards().getName(), postEntity.getAddressDetail(),
                 postEntity.getArea(), postEntity.getPriceMonth(), postEntity.getFurniture(), postEntity.getRoom(),
-                postEntity.getBathRoom(), postEntity.getExpiredDate(), postEntity.getVerified(), postEntity.getView(),
+                postEntity.getBathRoom(), postEntity.getExpiredDate(), postEntity.getLongitude(), postEntity.getLatitude(), postEntity.getVerified(), postEntity.getView(),
                 getPostImageListByPostId(postEntity.getId()), convertEntityToDescriptionPostDetailResponse(postEntity.getCreatedBy()),
                 postEntity.getCreatedDate(), postEntity.getModifiedDate());
 
@@ -289,12 +300,12 @@ public class PostServiceImpl implements PostService {
         }
 
         return new PostDetailForAdminResponse(postEntity.getId(), postEntity.getTitle(), postEntity.getDescription(),
-                postEntity.getTypeEstate().getName(), postEntity.getWards().getDistrict().getProvince().getName(),
-                postEntity.getWards().getDistrict().getName(), postEntity.getWards().getName(), postEntity.getAddressDetail(),
+                postEntity.getTypeEstate().getId(), postEntity.getWards().getDistrict().getProvince().getId(),
+                postEntity.getWards().getDistrict().getId(), postEntity.getWards().getId(), postEntity.getAddressDetail(),
                 postEntity.getArea(), postEntity.getPriceMonth(), postEntity.getFurniture(), postEntity.getRoom(),
-                postEntity.getBathRoom(), postEntity.getExpiredDate(), postEntity.getDeleted(), postEntity.getHide(),
+                postEntity.getBathRoom(), postEntity.getExpiredDate(), postEntity.getLongitude(), postEntity.getLatitude(), postEntity.getDeleted(), postEntity.getHide(),
                 postEntity.getLocked(), postEntity.getVerified(), postEntity.getView(),
-                postEntity.getTypePost().getName(),
+                postEntity.getTypePost().getId(),
                 getPostImageListByPostId(postEntity.getId()),
                 convertEntityToDescriptionPostDetailResponse(postEntity.getCreatedBy()), postEntity.getCreatedDate(),
                 postEntity.getModifiedDate());
@@ -313,12 +324,12 @@ public class PostServiceImpl implements PostService {
             throw new AppException("Không có quyền truy cập bài đăng này");
         }
         return new PostDetailForBusinessResponse(postEntity.getId(), postEntity.getTitle(), postEntity.getDescription(),
-                postEntity.getTypeEstate().getName(), postEntity.getWards().getDistrict().getProvince().getName(),
-                postEntity.getWards().getDistrict().getName(), postEntity.getWards().getName(), postEntity.getAddressDetail(),
+                postEntity.getTypeEstate().getId(), postEntity.getWards().getDistrict().getProvince().getId(),
+                postEntity.getWards().getDistrict().getId(), postEntity.getWards().getId(), postEntity.getAddressDetail(),
                 postEntity.getArea(), postEntity.getPriceMonth(), postEntity.getFurniture(), postEntity.getRoom(),
-                postEntity.getBathRoom(), postEntity.getExpiredDate(), postEntity.getDeleted(), postEntity.getHide(),
+                postEntity.getBathRoom(), postEntity.getExpiredDate(), postEntity.getLongitude(), postEntity.getLatitude(),  postEntity.getDeleted(), postEntity.getHide(),
                 postEntity.getLocked(), postEntity.getVerified(), postEntity.getView(),
-                postEntity.getTypePost().getName(),
+                postEntity.getTypePost().getId(),
                 getPostImageListByPostId(postEntity.getId()),
                 convertEntityToDescriptionPostDetailResponse(postEntity.getCreatedBy()), postEntity.getCreatedDate(),
                 postEntity.getModifiedDate());
@@ -490,7 +501,7 @@ public class PostServiceImpl implements PostService {
 
         return postReportEntityList.stream()
                 .map(o -> new PostReportDescriptionResponse(o.getId(), o.getTypeReport().getName(), o.getEmailReport(),
-                        o.getPhoneReport(), o.getHandled(), convertEntityToDescriptionReview(o.getHandledBy()), o.getCreatedDate()
+                        o.getPhoneReport(), o.getDescription(), o.getHandled(), convertEntityToDescriptionReview(o.getHandledBy()), o.getCreatedDate()
                         )).collect(Collectors.toList());
     }
 
@@ -636,7 +647,7 @@ public class PostServiceImpl implements PostService {
                 postEntity.getWards().getName(), postEntity.getArea(), postEntity.getPriceMonth(), postEntity.getVerified(),
                 postEntity.getCreatedBy().getFirstName() + " " + postEntity.getCreatedBy().getLastName(),
                 postImageEntityList.isEmpty() ? 1 : postImageEntityList.size(),  mainImageEntity == null ? imageDefaultUrl : mainImageEntity.getUrl(),
-                postEntity.getCreatedDate());
+                postEntity.getCreatedDate(), postEntity.getLongitude(), postEntity.getLatitude());
     }
 
     private PostDescriptionForAdminBusinessResponse convertPostEntityToPostDescriptionForAdminBusiness(PostEntity postEntity){
@@ -652,7 +663,7 @@ public class PostServiceImpl implements PostService {
                 postEntity.getWards().getName(), postEntity.getExpiredDate(), postEntity.getDeleted(), postEntity.getHide(), postEntity.getLocked(),
                 postEntity.getVerified(), postEntity.getCreatedBy().getFirstName() + " " + postEntity.getCreatedBy().getLastName(),
                 postImageEntityList.isEmpty() ? 1 : postImageEntityList.size(), postEntity.getTypePost().getName(),
-                mainImageEntity == null ? imageDefaultUrl : mainImageEntity.getUrl(), postEntity.getCreatedDate());
+                mainImageEntity == null ? imageDefaultUrl : mainImageEntity.getUrl(), postEntity.getCreatedDate(), postEntity.getLongitude(), postEntity.getLatitude());
     }
 
     private List<PostImageResponse> getPostImageListByPostId(Long id){

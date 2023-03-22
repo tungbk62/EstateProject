@@ -35,8 +35,8 @@ public class ImageServiceImpl implements ImageService {
     PostRepository postRepository;
     @Autowired
     PostImageRepository postImageRepository;
-//    @Autowired
-//    AmazonS3 amazonS3;
+    @Autowired
+    AmazonS3 amazonS3;
     @Value("${aws.bucketName}")
     private String bucketName;
     @Value("${image.post.default}")
@@ -58,8 +58,8 @@ public class ImageServiceImpl implements ImageService {
         String imageUrl;
 
         try {
-//            imageUrl = saveImageToS3(bucketName, filename, Optional.of(metadata), file);
-            userEntity.setImageUrl(avatarDefaultUrl);
+            imageUrl = saveImageToS3(bucketName, filename, Optional.of(metadata), file);
+            userEntity.setImageUrl(imageUrl);
             userRepository.save(userEntity);
         }catch (Exception e){
             throw new AppException(e.getMessage());
@@ -89,7 +89,7 @@ public class ImageServiceImpl implements ImageService {
 
         UserEntity currentUser = getCurrentUserEntity();
 
-        if(currentUser.getId().equals(postEntity.getCreatedBy().getId())){
+        if(!currentUser.getId().equals(postEntity.getCreatedBy().getId())){
             throw new AppException("Không có quyền sửa bài viết");
         }
 
@@ -212,23 +212,22 @@ public class ImageServiceImpl implements ImageService {
 
 
     public String saveImageToS3(String path, String fileName, Optional<Map<String, String>> optionalMetadata, MultipartFile file) {
-//        ObjectMetadata metadata = new ObjectMetadata();
-//
-//        optionalMetadata.ifPresent(map -> {
-//            if (!map.isEmpty()) {
-//                map.forEach(metadata::addUserMetadata);
-//            }
-//        });
-//
-//        try {
-//            amazonS3.putObject(path, fileName, file.getInputStream(), metadata);
-//            return amazonS3.getUrl(path, fileName).toString();
-//        } catch (AmazonServiceException e) {
-//            throw new AmazonServiceException("Failed to store file to s3", e);
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-        return imageDefaultUrl;
+        ObjectMetadata metadata = new ObjectMetadata();
+
+        optionalMetadata.ifPresent(map -> {
+            if (!map.isEmpty()) {
+                map.forEach(metadata::addUserMetadata);
+            }
+        });
+
+        try {
+            amazonS3.putObject(path, fileName, file.getInputStream(), metadata);
+            return amazonS3.getUrl(path, fileName).toString();
+        } catch (AmazonServiceException e) {
+            throw new AmazonServiceException("Failed to store file to s3", e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private Map<String, String> extractMetadata(MultipartFile file) {

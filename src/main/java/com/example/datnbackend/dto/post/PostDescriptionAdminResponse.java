@@ -35,4 +35,6 @@ public class PostDescriptionAdminResponse {
     private LocalDateTime createdDate;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime modifiedDate;
+    private Double longitude;
+    private Double latitude;
 }

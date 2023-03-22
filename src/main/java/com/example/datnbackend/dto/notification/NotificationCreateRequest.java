@@ -7,12 +7,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class NotificationCreateRequest {
-    private Long userId;
+    private List<Long> userIds;
     private String message;
     private Long typeNotificationId;
 }

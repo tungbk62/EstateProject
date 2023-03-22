@@ -56,6 +56,12 @@ public class PostEntity {
     @Column(name = "expired_date")
     private LocalDateTime expiredDate;
 
+    @Column(name = "longitude")
+    private Double longitude;
+
+    @Column(name = "latitude")
+    private Double latitude;
+
     @Column(name = "deleted", nullable = false)
     private Boolean deleted;
 

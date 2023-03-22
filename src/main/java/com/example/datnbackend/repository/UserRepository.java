@@ -45,6 +45,15 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
             "AND u.id = ?1"
             ,nativeQuery = true)
     UserEntity findOneByIdAndDeletedFalseWithNormalRole(Long id);
+
+    @Query(value = "SELECT u.* FROM user u " +
+            "JOIN user_role ur ON u.id = ur.user_id " +
+            "JOIN role r ON r.id = ur.role_id " +
+            "WHERE (r.name = 'ROLE_BUSINESS' OR r.name = 'ROLE_CUSTOMER') " +
+            "AND u.deleted = 0 " +
+            "AND u.id IN (?1)"
+            ,nativeQuery = true)
+    List<UserEntity> findOneByIdAndDeletedFalseWithNormalRoleAndIdIn(List<Long> id);
     @Query(value = "SELECT u.* FROM user u " +
             "JOIN user_role ur ON u.id = ur.user_id " +
             "JOIN role r ON r.id = ur.role_id " +

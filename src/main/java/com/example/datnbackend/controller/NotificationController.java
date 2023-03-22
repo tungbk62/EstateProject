@@ -31,7 +31,8 @@ public class NotificationController {
     @Secured("ROLE_ADMIN")
     ResponseEntity<Object> createNotification(@RequestBody NotificationCreateRequest requestBody){
         try{
-            return ResponseEntity.ok(notificationService.createNotification(requestBody));
+            notificationService.createNotification(requestBody);
+            return new ResponseEntity<>(new MainResponse(true, "Xoá thành công"), HttpStatus.OK);
         }catch(Exception e){
             return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
         }
@@ -89,7 +90,7 @@ public class NotificationController {
     ResponseEntity<Object> deleteNotificationCreated(@RequestBody List<Long> ids){
         try{
             notificationService.deleteNotificationCreated(ids);
-            return new ResponseEntity<>(new MainResponse(false, "Xoá thành công"), HttpStatus.OK);
+            return new ResponseEntity<>(new MainResponse(true, "Xoá thành công"), HttpStatus.OK);
         }catch(Exception e){
             return new ResponseEntity<>(new MainResponse(false, e.getMessage()), HttpStatus.EXPECTATION_FAILED);
         }

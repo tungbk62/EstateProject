@@ -19,8 +19,11 @@ public class UserDetailResponse {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate birthDay;
     private String phone;
+    private Long provinceId;
     private String province;
+    private Long districtId;
     private String district;
+    private Long wardsId;
     private String wards;
     private String imageUrl;
     private Boolean displayReview;

@@ -72,6 +72,8 @@
             <column name="room" type="int"/>
             <column name="bath_room" type="int"/>
             <column name="expired_date" type="datetime"/>
+            <column name="longitude" type="double"/>
+            <column name="latitude" type="double"/>
             <column name="deleted" type="boolean">
                 <constraints nullable="false"/>
             </column>

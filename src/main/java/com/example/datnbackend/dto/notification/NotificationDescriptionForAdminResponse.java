@@ -16,6 +16,7 @@ public class NotificationDescriptionForAdminResponse {
     private UserDescriptionNotificationResponse user;
     private String typeNotification;
     private Boolean viewed;
+    private String message;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdDate;
 }

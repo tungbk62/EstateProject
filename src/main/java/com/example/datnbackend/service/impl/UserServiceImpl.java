@@ -201,7 +201,7 @@ public class UserServiceImpl implements UserService {
 
         userDescriptionAdminResponseList = userEntityList.stream().map(o -> new UserDescriptionAdminResponse(
                 o.getId(), o.getEmail(), o.getFirstName(), o.getLastName(), o.getDisplayReview(), o.getLocked(),
-                returnTypeOfUser(o), o.getImageUrl() == null ? avatarDefaultUrl : o.getImageUrl())).collect(Collectors.toList());
+                o.getImageUrl() == null ? avatarDefaultUrl : o.getImageUrl(), returnTypeOfUser(o))).collect(Collectors.toList());
 
         return userDescriptionAdminResponseList;
     }
@@ -216,8 +216,11 @@ public class UserServiceImpl implements UserService {
                 userEntity.getLastName(),
                 userEntity.getBirthDay(),
                 userEntity.getPhone(),
+                userEntity.getWards() == null ? null : userEntity.getWards().getDistrict().getProvince().getId(),
                 userEntity.getWards() == null ? null : userEntity.getWards().getDistrict().getProvince().getName(),
+                userEntity.getWards() == null ? null : userEntity.getWards().getDistrict().getId(),
                 userEntity.getWards() == null ? null : userEntity.getWards().getDistrict().getName(),
+                userEntity.getWards() == null ? null : userEntity.getWards().getId(),
                 userEntity.getWards() == null ? null : userEntity.getWards().getName(),
                 userEntity.getImageUrl() == null ? avatarDefaultUrl : userEntity.getImageUrl(),
                 userEntity.getDisplayReview(),
@@ -292,10 +295,13 @@ public class UserServiceImpl implements UserService {
                 userEntity.getLastName(),
                 userEntity.getBirthDay(),
                 userEntity.getPhone(),
+                userEntity.getWards() == null ? null : userEntity.getWards().getDistrict().getProvince().getId(),
                 userEntity.getWards() == null ? null : userEntity.getWards().getDistrict().getProvince().getName(),
+                userEntity.getWards() == null ? null : userEntity.getWards().getDistrict().getId(),
                 userEntity.getWards() == null ? null : userEntity.getWards().getDistrict().getName(),
+                userEntity.getWards() == null ? null : userEntity.getWards().getId(),
                 userEntity.getWards() == null ? null : userEntity.getWards().getName(),
-                userEntity.getImageUrl() == null ? null : userEntity.getImageUrl(),
+                userEntity.getImageUrl() == null ? avatarDefaultUrl : userEntity.getImageUrl(),
                 userEntity.getDisplayReview(),
                 userEntity.getCreatedDate(),
                 returnTypeOfUser(userEntity));

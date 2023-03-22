@@ -17,6 +17,7 @@ public class PostReportDescriptionResponse {
     private String typeReportName;
     private String emailReport;
     private String phoneReport;
+    private String description;
     private Boolean handled;
     private UserDescriptionReviewResponse handledBy;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
